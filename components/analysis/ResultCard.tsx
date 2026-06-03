@@ -65,7 +65,11 @@ export default function ResultCard({ result, loading, accentColor, label, onNext
   if (!result) {
     return (
       <div className="flex flex-col items-center justify-center py-16 text-center gap-3">
-        <span className="material-symbols-outlined" style={{fontSize:'48px', color:'var(--outline)', opacity:0.4}}>blur_on</span>
+        <svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="var(--outline)" strokeWidth="1" opacity={0.4}>
+  <circle cx="12" cy="12" r="3"/>
+  <circle cx="12" cy="12" r="6" strokeDasharray="2 2"/>
+  <circle cx="12" cy="12" r="9" strokeDasharray="1 3"/>
+</svg>
         <p className="font-body-sm text-outline">Sélectionne tes critères et lance l'analyse</p>
       </div>
     )
@@ -109,7 +113,11 @@ export default function ResultCard({ result, loading, accentColor, label, onNext
             <div className="w-2 h-2 rounded-full" style={{background: conf.dot}} />
             <span className="font-label-caps text-on-surface" style={{fontSize:'11px'}}>{conf.label}</span>
           </div>
-          <span className="material-symbols-outlined text-outline-variant" style={{fontSize:'18px'}}>info</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" className="text-outline-variant">
+  <circle cx="12" cy="12" r="10"/>
+  <line x1="12" y1="8" x2="12" y2="8.5" strokeWidth="2"/>
+  <line x1="12" y1="11" x2="12" y2="16"/>
+</svg>
         </div>
       </div>
 
@@ -119,7 +127,10 @@ export default function ResultCard({ result, loading, accentColor, label, onNext
           className="w-full h-14 rounded-xl font-body-lg font-bold flex items-center justify-center gap-2 transition-all active:scale-[0.98]"
           style={{background: accent, color: accentColor === 'lime' ? '#161f00' : '#003548'}}>
           {nextLabel ?? 'Continuer'}
-          <span className="material-symbols-outlined">arrow_right_alt</span>
+          <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+  <line x1="5" y1="12" x2="19" y2="12"/>
+  <polyline points="13 6 19 12 13 18"/>
+</svg>
         </button>
       )}
     </div>

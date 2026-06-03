@@ -10,7 +10,12 @@ export default function ComparePanel({ searchResult, selfResult }: ComparePanelP
   if (!searchResult || !selfResult) {
     return (
       <div className="flex flex-col items-center justify-center py-20 text-center gap-4">
-        <span className="material-symbols-outlined" style={{fontSize:'56px', color:'var(--outline)', opacity:0.3}}>balance</span>
+        <svg width="56" height="56" viewBox="0 0 24 24" fill="none" stroke="var(--outline)" strokeWidth="1" strokeLinecap="round" opacity={0.3}>
+  <line x1="12" y1="3" x2="12" y2="21"/>
+  <path d="M5 7l7-4 7 4"/>
+  <path d="M5 7l-3 6a3 3 0 0 0 6 0L5 7z"/>
+  <path d="M19 7l-3 6a3 3 0 0 0 6 0L19 7z"/>
+</svg>
         <div className="space-y-2">
           <p className="font-headline-md text-on-surface" style={{fontSize:'18px'}}>Complète les deux profils</p>
           <p className="font-body-sm text-outline">Lance une analyse sur "Je cherche" et "Je suis" pour voir ton miroir.</p>
@@ -91,13 +96,26 @@ export default function ComparePanel({ searchResult, selfResult }: ComparePanelP
           }}
           className="w-full h-14 rounded-xl flex items-center justify-center gap-3 font-label-caps text-on-surface transition-all active:scale-[0.98] hover:bg-white/5"
           style={{border:'1px solid rgba(142,148,121,0.3)'}}>
-          <span className="material-symbols-outlined" style={{fontSize:'18px'}}>share</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+  <circle cx="18" cy="5" r="3"/>
+  <circle cx="6" cy="12" r="3"/>
+  <circle cx="18" cy="19" r="3"/>
+  <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+  <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+</svg>
           PARTAGER MON RÉSULTAT
         </button>
         <button
           className="w-full h-14 rounded-xl flex items-center justify-center gap-3 font-label-caps text-on-surface transition-all active:scale-[0.98] hover:bg-white/5"
           style={{border:'1px solid rgba(142,148,121,0.3)'}}>
-          <span className="material-symbols-outlined" style={{fontSize:'18px'}}>tune</span>
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round">
+  <line x1="4" y1="6" x2="20" y2="6"/>
+  <line x1="4" y1="12" x2="20" y2="12"/>
+  <line x1="4" y1="18" x2="20" y2="18"/>
+  <circle cx="8" cy="6" r="2" fill="currentColor"/>
+  <circle cx="16" cy="12" r="2" fill="currentColor"/>
+  <circle cx="10" cy="18" r="2" fill="currentColor"/>
+</svg>
           AJUSTER MES CRITÈRES
         </button>
       </div>
