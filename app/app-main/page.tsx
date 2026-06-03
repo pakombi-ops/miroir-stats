@@ -129,7 +129,7 @@ export default function AppMain() {
             </div>
 
             {currentView === 'criteria' && (
-              <CriteriaPanel criteria={searchCriteria} onChange={updateSearchCriteria} accentColor="lime" loading={loadingSearch} />
+              <CriteriaPanel criteria={searchCriteria} onChange={updateSearchCriteria} accentColor="lime" loading={loadingSearch} mode="search"/>
             )}
 
             {currentView === 'result' && (
@@ -164,7 +164,7 @@ export default function AppMain() {
             </div>
 
             {currentView === 'criteria' && (
-              <CriteriaPanel criteria={selfCriteria} onChange={updateSelfCriteria} accentColor="blue" loading={loadingSelf} />
+              <CriteriaPanel criteria={selfCriteria} onChange={updateSelfCriteria} accentColor="blue" loading={loadingSelf} mode="self"/>
             )}
 
             {currentView === 'result' && (

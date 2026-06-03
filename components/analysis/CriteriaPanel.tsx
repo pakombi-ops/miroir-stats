@@ -1,5 +1,4 @@
 'use client'
-import { useState } from 'react'
 import { Criteria, getDefaultCriteria } from '@/lib/types'
 
 interface Props {
@@ -7,6 +6,7 @@ interface Props {
   onChange: (id: keyof Criteria, value: any) => void
   accentColor: 'lime' | 'blue'
   loading?: boolean
+  mode?: 'search' | 'self'   // ← nouveau
 }
 
 function ToggleGroup({ options, value, onChange, accent }: { options: string[]; value: string; onChange: (v: string) => void; accent: string }) {
@@ -34,10 +34,12 @@ function SliderField({ label, value, min, max, step, onChange, format, accent }:
 }) {
   return (
     <div style={{ marginTop: '10px' }}>
-      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
-        <span style={{ fontSize: '11px', color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
-        <span style={{ fontSize: '14px', fontWeight: 500, color: accent }}>{format(value)}</span>
-      </div>
+      {label && (
+        <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+          <span style={{ fontSize: '11px', color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+          <span style={{ fontSize: '14px', fontWeight: 500, color: accent }}>{format(value)}</span>
+        </div>
+      )}
       <input type="range" min={min} max={max} step={step} value={value}
         onChange={e => onChange(Number(e.target.value))}
         style={{ width: '100%', accentColor: accent, height: '4px', cursor: 'pointer' }} />
@@ -78,7 +80,9 @@ function Card({ label, isActive, accent, children }: { label: string; isActive: 
   )
 }
 
-export default function CriteriaPanel({ criteria, onChange, accentColor, loading }: Props) {
+const RELIGIONS = ['Toutes', 'Athée / Agnostique', 'Chrétienne', 'Musulmane', 'Juive', 'Hindoue', 'Bouddhiste', 'Autre']
+
+export default function CriteriaPanel({ criteria, onChange, accentColor, loading, mode = 'search' }: Props) {
   const def = getDefaultCriteria()
   const accent = accentColor === 'lime' ? '#C8FF00' : '#74d1ff'
   const set = (key: keyof Criteria, value: any) => onChange(key, value)
@@ -87,12 +91,12 @@ export default function CriteriaPanel({ criteria, onChange, accentColor, loading
   const revenuStep = criteria.revenuType === 'mensuel' ? 500 : 6000
 
   const formatRevenu = (v: number) => {
-    if (v === 0) return 'Aucun minimum'
+    if (v === 0) return mode === 'self' ? '0 €' : 'Aucun minimum'
     return `${v.toLocaleString()} € / ${criteria.revenuType === 'mensuel' ? 'mois' : 'an'}`
   }
 
   const formatTaille = (v: number) => {
-    if (v === 0) return 'Aucun minimum'
+    if (v === 0) return mode === 'self' ? '0 cm' : 'Aucun minimum'
     if (criteria.tailleUnit === 'cm') return `${v} cm`
     const feet = Math.floor(v / 30.48)
     const inches = Math.round((v / 30.48 - feet) * 12)
@@ -112,33 +116,61 @@ export default function CriteriaPanel({ criteria, onChange, accentColor, loading
         />
       </Card>
 
-      {/* Âge */}
-      <Card label="Tranche d'âge" isActive={criteria.ageMin !== def.ageMin || criteria.ageMax !== def.ageMax} accent={accent}>
-        <div style={{ fontSize: '20px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)', marginTop: '8px' }}>
-          {criteria.ageMin} – {criteria.ageMax} ans
-        </div>
-        <SliderField label="Âge minimum" value={criteria.ageMin} min={18} max={criteria.ageMax - 1} step={1}
-          onChange={v => set('ageMin', v)} format={v => `${v} ans`} accent={accent} />
-        <SliderField label="Âge maximum" value={criteria.ageMax} min={criteria.ageMin + 1} max={80} step={1}
-          onChange={v => set('ageMax', v)} format={v => `${v} ans`} accent={accent} />
-      </Card>
+      {/* Âge — fourchette en mode search, slider unique en mode self */}
+      {mode === 'search' ? (
+        <Card label="Tranche d'âge" isActive={criteria.ageMin !== def.ageMin || criteria.ageMax !== def.ageMax} accent={accent}>
+          <div style={{ fontSize: '20px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)', marginTop: '8px' }}>
+            {criteria.ageMin} – {criteria.ageMax} ans
+          </div>
+          <SliderField label="Âge minimum" value={criteria.ageMin} min={18} max={criteria.ageMax - 1} step={1}
+            onChange={v => set('ageMin', v)} format={v => `${v} ans`} accent={accent} />
+          <SliderField label="Âge maximum" value={criteria.ageMax} min={criteria.ageMin + 1} max={80} step={1}
+            onChange={v => set('ageMax', v)} format={v => `${v} ans`} accent={accent} />
+        </Card>
+      ) : (
+        <Card label="Âge" isActive={criteria.age !== def.age} accent={accent}>
+          <div style={{ fontSize: '28px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: accent, marginTop: '8px' }}>
+            {criteria.age} ans
+          </div>
+          <SliderField label="" value={criteria.age} min={18} max={80} step={1}
+            onChange={v => set('age', v)} format={v => `${v} ans`} accent={accent} />
+        </Card>
+      )}
 
       {/* Revenu */}
-      <Card label="Revenu minimum" isActive={criteria.revenuMin > 0} accent={accent}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-          <span style={{ fontSize: '18px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)' }}>
-            {formatRevenu(criteria.revenuMin)}
-          </span>
-          <MiniToggle
-            options={[{ label: '/mois', value: 'mensuel' }, { label: '/an', value: 'annuel' }]}
-            value={criteria.revenuType}
-            onChange={v => set('revenuType', v)}
-            accent={accent}
-          />
-        </div>
-        <SliderField label="" value={Math.min(criteria.revenuMin, revenuMax)} min={0} max={revenuMax} step={revenuStep}
-          onChange={v => set('revenuMin', v)} format={formatRevenu} accent={accent} />
-      </Card>
+      {mode === 'search' ? (
+        <Card label="Revenu minimum" isActive={criteria.revenuMin > 0} accent={accent}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+            <span style={{ fontSize: '18px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)' }}>
+              {formatRevenu(criteria.revenuMin)}
+            </span>
+            <MiniToggle
+              options={[{ label: '/mois', value: 'mensuel' }, { label: '/an', value: 'annuel' }]}
+              value={criteria.revenuType}
+              onChange={v => set('revenuType', v)}
+              accent={accent}
+            />
+          </div>
+          <SliderField label="" value={Math.min(criteria.revenuMin, revenuMax)} min={0} max={revenuMax} step={revenuStep}
+            onChange={v => set('revenuMin', v)} format={formatRevenu} accent={accent} />
+        </Card>
+      ) : (
+        <Card label="Revenu" isActive={criteria.revenu > 0} accent={accent}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+            <span style={{ fontSize: '18px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: accent }}>
+              {formatRevenu(criteria.revenu)}
+            </span>
+            <MiniToggle
+              options={[{ label: '/mois', value: 'mensuel' }, { label: '/an', value: 'annuel' }]}
+              value={criteria.revenuType}
+              onChange={v => set('revenuType', v)}
+              accent={accent}
+            />
+          </div>
+          <SliderField label="" value={Math.min(criteria.revenu, revenuMax)} min={0} max={revenuMax} step={revenuStep}
+            onChange={v => set('revenu', v)} format={formatRevenu} accent={accent} />
+        </Card>
+      )}
 
       {/* Zone */}
       <Card label="Zone géographique" isActive={criteria.zone !== def.zone} accent={accent}>
@@ -160,31 +192,71 @@ export default function CriteriaPanel({ criteria, onChange, accentColor, loading
         />
       </Card>
 
-      {/* Marital */}
-      <Card label="Déjà marié(e)" isActive={criteria.dejaMarie !== def.dejaMarie} accent={accent}>
+      {/* Religion — dans les deux modes */}
+      <Card label="Religion" isActive={criteria.religion !== def.religion} accent={accent}>
         <ToggleGroup
-          options={['Peu importe', 'Jamais marié(e)', 'Divorcé(e)', 'Veuf/Veuve']}
-          value={criteria.dejaMarie}
-          onChange={v => set('dejaMarie', v)}
+          options={RELIGIONS}
+          value={criteria.religion}
+          onChange={v => set('religion', v)}
           accent={accent}
         />
       </Card>
 
-      {/* Taille */}
-      <Card label="Taille minimum" isActive={criteria.tailleMin > 0} accent={accent}>
-        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
-          <span style={{ fontSize: '18px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)' }}>
-            {formatTaille(criteria.tailleMin)}
-          </span>
-          <MiniToggle
-            options={[{ label: 'cm', value: 'cm' }, { label: 'pieds', value: 'pieds' }]}
-            value={criteria.tailleUnit}
-            onChange={v => set('tailleUnit', v)}
+      {/* Marital — seulement en mode search */}
+      {mode === 'search' && (
+        <Card label="Déjà marié(e)" isActive={criteria.dejaMarie !== def.dejaMarie} accent={accent}>
+          <ToggleGroup
+            options={['Peu importe', 'Jamais marié(e)', 'Divorcé(e)', 'Veuf/Veuve']}
+            value={criteria.dejaMarie}
+            onChange={v => set('dejaMarie', v)}
             accent={accent}
           />
-        </div>
-        <SliderField label="" value={criteria.tailleMin} min={0} max={220} step={1}
-          onChange={v => set('tailleMin', v)} format={formatTaille} accent={accent} />
+        </Card>
+      )}
+
+      {/* Taille */}
+      {mode === 'search' ? (
+        <Card label="Taille minimum" isActive={criteria.tailleMin > 0} accent={accent}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+            <span style={{ fontSize: '18px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)' }}>
+              {formatTaille(criteria.tailleMin)}
+            </span>
+            <MiniToggle
+              options={[{ label: 'cm', value: 'cm' }, { label: 'pieds', value: 'pieds' }]}
+              value={criteria.tailleUnit}
+              onChange={v => set('tailleUnit', v)}
+              accent={accent}
+            />
+          </div>
+          <SliderField label="" value={criteria.tailleMin} min={0} max={220} step={1}
+            onChange={v => set('tailleMin', v)} format={formatTaille} accent={accent} />
+        </Card>
+      ) : (
+        <Card label="Taille" isActive={criteria.taille !== def.taille} accent={accent}>
+          <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+            <span style={{ fontSize: '28px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: accent }}>
+              {formatTaille(criteria.taille)}
+            </span>
+            <MiniToggle
+              options={[{ label: 'cm', value: 'cm' }, { label: 'pieds', value: 'pieds' }]}
+              value={criteria.tailleUnit}
+              onChange={v => set('tailleUnit', v)}
+              accent={accent}
+            />
+          </div>
+          <SliderField label="" value={criteria.taille} min={140} max={220} step={1}
+            onChange={v => set('taille', v)} format={formatTaille} accent={accent} />
+        </Card>
+      )}
+
+      {/* Enfants — dans les deux modes */}
+      <Card label="Enfant(s)" isActive={criteria.enfants !== def.enfants} accent={accent}>
+        <ToggleGroup
+          options={mode === 'search' ? ['Peu importe', 'Sans enfants', 'Avec enfants'] : ['Non', 'Oui']}
+          value={criteria.enfants}
+          onChange={v => set('enfants', v)}
+          accent={accent}
+        />
       </Card>
 
       {/* Obésité */}

@@ -2,14 +2,19 @@ export interface Criteria {
   genre: string
   ageMin: number
   ageMax: number
+  age: number              // ← pour "Je suis"
   revenuMin: number
+  revenu: number           // ← pour "Je suis"
   revenuType: 'mensuel' | 'annuel'
   zone: string
   ethnie: string
   dejaMarie: string
   tailleMin: number
+  taille: number           // ← pour "Je suis"
   tailleUnit: 'cm' | 'pieds'
   obesite: string
+  enfants: string          // ← nouveau
+  religion: string         // ← nouveau
 }
 
 export interface AnalysisResult {
@@ -32,14 +37,19 @@ export function getDefaultCriteria(): Criteria {
     genre: 'Tous',
     ageMin: 18,
     ageMax: 80,
+    age: 30,
     revenuMin: 0,
+    revenu: 0,
     revenuType: 'mensuel',
     zone: 'Monde entier',
     ethnie: 'Toutes',
     dejaMarie: 'Peu importe',
     tailleMin: 0,
+    taille: 170,
     tailleUnit: 'cm',
     obesite: 'Peu importe',
+    enfants: 'Peu importe',
+    religion: 'Toutes',
   }
 }
 
@@ -49,13 +59,19 @@ export function getActiveCriteria(criteria: Criteria): string[] {
   if (criteria.genre !== def.genre) active.push(`- Genre : ${criteria.genre}`)
   if (criteria.ageMin !== def.ageMin || criteria.ageMax !== def.ageMax)
     active.push(`- Âge : ${criteria.ageMin} - ${criteria.ageMax} ans`)
+  if (criteria.age !== def.age) active.push(`- Âge : ${criteria.age} ans`)
   if (criteria.revenuMin > 0)
     active.push(`- Revenu min : ${criteria.revenuMin.toLocaleString()} € / ${criteria.revenuType === 'mensuel' ? 'mois' : 'an'}`)
+  if (criteria.revenu > 0)
+    active.push(`- Revenu : ${criteria.revenu.toLocaleString()} € / ${criteria.revenuType === 'mensuel' ? 'mois' : 'an'}`)
   if (criteria.zone !== def.zone) active.push(`- Zone : ${criteria.zone}`)
   if (criteria.ethnie !== def.ethnie) active.push(`- Origine : ${criteria.ethnie}`)
   if (criteria.dejaMarie !== def.dejaMarie) active.push(`- Marital : ${criteria.dejaMarie}`)
   if (criteria.tailleMin > 0) active.push(`- Taille min : ${criteria.tailleMin} ${criteria.tailleUnit}`)
+  if (criteria.taille !== def.taille) active.push(`- Taille : ${criteria.taille} cm`)
   if (criteria.obesite !== def.obesite) active.push(`- Obésité : ${criteria.obesite}`)
+  if (criteria.enfants !== def.enfants) active.push(`- Enfants : ${criteria.enfants}`)
+  if (criteria.religion !== def.religion) active.push(`- Religion : ${criteria.religion}`)
   return active
 }
 
