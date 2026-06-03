@@ -56,6 +56,7 @@ export default function AppMain() {
       setResult(data)
       if (credits !== null && userId) setCredits(c => Math.max(0, (c ?? 1) - 1))
       setView(prev => ({ ...prev, [type]: 'result' }))
+      window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch { setError("Erreur lors de l'analyse. Réessaie.") }
     finally { setLoading(false) }
   }
