@@ -9,6 +9,7 @@ interface ResultCardProps {
   label: string
   onNext?: () => void
   nextLabel?: string
+  onModify?: () => void
 }
 
 function AnimatedNumber({ value, color }: { value: number; color: string }) {
@@ -56,7 +57,7 @@ const CONFIDENCE_STYLES = {
   'faible': { dot: '#FF5C4D', label: 'Confiance faible' },
 }
 
-export default function ResultCard({ result, loading, accentColor, label, onNext, nextLabel }: ResultCardProps) {
+export default function ResultCard({ result, loading, accentColor, label, onNext, nextLabel, onModify }: ResultCardProps) {
   const accent    = accentColor === 'lime' ? '#C8FF00' : '#74d1ff'
   const accentDim = accentColor === 'lime' ? '#a8d700' : '#4db8e8'
 
@@ -262,6 +263,7 @@ export default function ResultCard({ result, loading, accentColor, label, onNext
             </svg>
           </button>
           <button
+            onClick={onModify}
             style={{
               width:'100%', height:'56px', borderRadius:'12px',
               background:'transparent', color:'var(--on-surface)',
