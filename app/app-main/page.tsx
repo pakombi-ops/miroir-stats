@@ -186,8 +186,7 @@ export default function AppMain() {
                     onModify={() => {
                     setView(p => ({ ...p, self: 'criteria' }))
                     window.scrollTo({ top: 0, behavior: 'smooth' })
-                    }}
-                    window.scrollTo({ top: 0, behavior: 'smooth' })} />
+                    }} />
             )}
           </div>
         )}
