@@ -80,54 +80,61 @@ export default function Home() {
       </header>
 
       {/* Visual central */}
-      <main className="flex-grow flex items-center justify-center relative overflow-hidden px-5 z-10">
-        <div className="relative flex items-center justify-center" style={{width:'320px', height:'320px'}}>
+<main className="flex-grow flex items-center justify-center relative overflow-hidden px-5 z-10">
+  <div className="relative flex items-center justify-center" style={{width:'320px', height:'320px'}}>
 
-          {/* Anneau extérieur — Ce que tu cherches (vert) */}
-          <div ref={outerRef} className="ring-arc absolute" style={{
-            width:'100%', height:'100%',
-            borderTopWidth:'2px',
-            opacity:0.8,
-            transform:'rotate(45deg)'
-          }}>
-            <div style={{
-              position:'absolute', top:'-24px', left:'50%', transform:'translateX(-50%)',
-              fontFamily:'DM Sans', fontSize:'12px', fontWeight:500, letterSpacing:'0.1em',
-              color:'#8e9479', whiteSpace:'nowrap', textTransform:'uppercase'
-            }}>
-              Ce que tu cherches
-            </div>
-          </div>
+    {/* Anneau extérieur — Ce que tu cherches (vert) */}
+    <div ref={outerRef} className="ring-arc absolute" style={{
+      width:'100%', height:'100%',
+      borderTopWidth:'2px',
+      opacity:0.8,
+      transform:'rotate(45deg)'
+    }}/>
 
-          {/* Anneau intérieur — Ce que tu es (bleu) */}
-          <div ref={innerRef} className="ring-arc-inner absolute" style={{
-            width:'65%', height:'65%',
-            borderTopWidth:'2px',
-            opacity:0.5,
-            transform:'rotate(-120deg)'
-          }}>
-            <div style={{
-              position:'absolute', bottom:'-24px', left:'50%', transform:'translateX(-50%)',
-              fontFamily:'DM Sans', fontSize:'12px', fontWeight:500, letterSpacing:'0.1em',
-              color:'#74d1ff', whiteSpace:'nowrap', textTransform:'uppercase'
-            }}>
-              Ce que tu es
-            </div>
-          </div>
+    {/* Anneau intérieur — Ce que tu es (bleu) */}
+    <div ref={innerRef} className="ring-arc-inner absolute" style={{
+      width:'65%', height:'65%',
+      borderTopWidth:'2px',
+      opacity:0.5,
+      transform:'rotate(-120deg)'
+    }}/>
 
-          {/* Point central */}
-          <div style={{
-            width:'4px', height:'4px', borderRadius:'50%',
-            background:'#C8FF00',
-            boxShadow:'0 0 15px rgba(200,255,0,0.8)',
-            zIndex:20
-          }}/>
+    {/* Textes courbés en SVG par-dessus */}
+    <svg className="absolute inset-0 w-full h-full" viewBox="0 0 320 320" style={{overflow:'visible'}}>
+      {/* Chemin anneau extérieur (r=158) — texte sur le haut */}
+      <defs>
+        <path id="outerArc" d="M 160,160 m -158,0 a 158,158 0 1,1 316,0" />
+        <path id="innerArc" d="M 160,160 m -103,0 a 103,103 0 1,1 206,0" />
+      </defs>
 
-          {/* Lignes de grille */}
-          <div className="absolute w-full" style={{height:'1px', background:'rgba(255,255,255,0.05)', top:'50%'}}/>
-          <div className="absolute h-full" style={{width:'1px', background:'rgba(255,255,255,0.05)', left:'50%'}}/>
-        </div>
-      </main>
+      {/* "CE QUE TU CHERCHES" sur anneau extérieur */}
+      <text style={{fontFamily:'DM Sans', fontSize:'11px', fontWeight:500, letterSpacing:'0.12em', fill:'#8e9479', textTransform:'uppercase'}}>
+        <textPath href="#outerArc" startOffset="15%">
+          CE QUE TU CHERCHES
+        </textPath>
+      </text>
+
+      {/* "CE QUE TU ES" sur anneau intérieur */}
+      <text style={{fontFamily:'DM Sans', fontSize:'11px', fontWeight:500, letterSpacing:'0.12em', fill:'#74d1ff'}}>
+        <textPath href="#innerArc" startOffset="20%">
+          CE QUE TU ES
+        </textPath>
+      </text>
+    </svg>
+
+    {/* Point central */}
+    <div style={{
+      width:'4px', height:'4px', borderRadius:'50%',
+      background:'#C8FF00',
+      boxShadow:'0 0 15px rgba(200,255,0,0.8)',
+      zIndex:20
+    }}/>
+
+    {/* Lignes de grille */}
+    <div className="absolute w-full" style={{height:'1px', background:'rgba(255,255,255,0.05)', top:'50%'}}/>
+    <div className="absolute h-full" style={{width:'1px', background:'rgba(255,255,255,0.05)', left:'50%'}}/>
+  </div>
+</main>
 
       {/* Footer CTA */}
       <footer className="pb-12 px-5 flex flex-col items-center gap-8 z-10">
