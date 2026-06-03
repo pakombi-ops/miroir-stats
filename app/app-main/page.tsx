@@ -136,9 +136,12 @@ export default function AppMain() {
               <ResultCard result={searchResult} loading={loadingSearch} accentColor="lime"
                 label="CE QUE TU CHERCHES REPRÉSENTE"
                 zone={searchCriteria.zone}
-                onNext={() => { setTab('self'); setView(p => ({ ...p, self: 'criteria' })) }}
+                onNext={() => { setTab('self'); setView(p => ({ ...p, self: 'criteria' }))
+                window.scrollTo({ top: 0, behavior: 'smooth' }) 
+              }}
                 nextLabel="Analyser mon profil"
-                onModify={() => setView(p => ({ ...p, search: 'criteria' }))} />
+                onModify={() => setView(p => ({ ...p, search: 'criteria' }))
+                window.scrollTo({ top: 0, behavior: 'smooth' })} />
             )}
           </div>
         )}
@@ -172,9 +175,12 @@ export default function AppMain() {
                <ResultCard result={selfResult} loading={loadingSelf} accentColor="blue"
                   label="TU REPRÉSENTES"
                    zone={selfCriteria.zone}
-                   onNext={() => setTab('compare')}
+                   onNext={() => setTab('compare')
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                   }
                    nextLabel="Voir mon miroir"
-                    onModify={() => setView(p => ({ ...p, self: 'criteria' }))} />
+                    onModify={() => setView(p => ({ ...p, self: 'criteria' }))
+                    window.scrollTo({ top: 0, behavior: 'smooth' })} />
             )}
           </div>
         )}
