@@ -140,8 +140,11 @@ export default function AppMain() {
                 window.scrollTo({ top: 0, behavior: 'smooth' }) 
               }}
                 nextLabel="Analyser mon profil"
-                onModify={() => setView(p => ({ ...p, search: 'criteria' }))
-                window.scrollTo({ top: 0, behavior: 'smooth' })} />
+                onModify={() => {
+                setView(p => ({ ...p, search: 'criteria' }))
+                window.scrollTo({ top: 0, behavior: 'smooth' })
+              }}
+                />
             )}
           </div>
         )}
