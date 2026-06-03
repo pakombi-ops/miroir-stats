@@ -183,7 +183,11 @@ export default function AppMain() {
               <h1 style={{ fontFamily: 'Syne, sans-serif', fontSize: '28px', fontWeight: 800, color: '#C8FF00' }}>MIROIR</h1>
               <p style={{ fontSize: '10px', color: 'var(--outline)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Ton analyse complète</p>
             </div>
-            <ComparePanel searchResult={searchResult} selfResult={selfResult} />
+            <ComparePanel
+  searchResult={searchResult}
+  selfResult={selfResult}
+  onAdjust={() => { setTab('search'); setView(p => ({ ...p, search: 'criteria' })) }}
+/>
           </div>
         )}
       </div>
