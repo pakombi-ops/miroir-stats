@@ -10,6 +10,7 @@ interface ResultCardProps {
   onNext?: () => void
   nextLabel?: string
   onModify?: () => void
+  zone?: string
 }
 
 function AnimatedNumber({ value, color }: { value: number; color: string }) {
@@ -57,7 +58,7 @@ const CONFIDENCE_STYLES = {
   'faible': { dot: '#FF5C4D', label: 'Confiance faible' },
 }
 
-export default function ResultCard({ result, loading, accentColor, label, onNext, nextLabel, onModify }: ResultCardProps) {
+export default function ResultCard({ result, loading, accentColor, label, onNext, nextLabel, onModify, zone }: ResultCardProps) {
   const accent    = accentColor === 'lime' ? '#C8FF00' : '#74d1ff'
   const accentDim = accentColor === 'lime' ? '#a8d700' : '#4db8e8'
 
@@ -114,7 +115,7 @@ export default function ResultCard({ result, loading, accentColor, label, onNext
           <AnimatedNumber value={result.percentage} color={accent} />
         </div>
         <p style={{fontFamily:'DM Sans', fontSize:'16px', color:'var(--on-surface-variant)', fontStyle:'italic', marginTop:'8px'}}>
-          soit environ <span style={{color:'var(--on-surface)', fontWeight:500}}>{result.count}</span> personnes dans le monde
+          soit environ <span style={{color:'var(--on-surface)', fontWeight:500}}>{result.count}</span> personnes {zone && zone !== 'Monde entier' ? `en ${zone}` : 'dans le monde'}
         </p>
       </div>
 

@@ -135,6 +135,7 @@ export default function AppMain() {
             {currentView === 'result' && (
               <ResultCard result={searchResult} loading={loadingSearch} accentColor="lime"
                 label="CE QUE TU CHERCHES REPRÉSENTE"
+                zone={searchCriteria.zone}
                 onNext={() => { setTab('self'); setView(p => ({ ...p, self: 'criteria' })) }}
                 nextLabel="Analyser mon profil"
                 onModify={() => setView(p => ({ ...p, search: 'criteria' }))} />
@@ -168,11 +169,12 @@ export default function AppMain() {
             )}
 
             {currentView === 'result' && (
-              <ResultCard result={selfResult} loading={loadingSelf} accentColor="blue"
-                label="TU REPRÉSENTES"
-                onNext={() => setTab('compare')}
-                nextLabel="Voir mon miroir" 
-                onModify={() => setView(p => ({ ...p, self: 'criteria' }))} />
+               <ResultCard result={selfResult} loading={loadingSelf} accentColor="blue"
+                  label="TU REPRÉSENTES"
+                   zone={selfCriteria.zone}
+                   onNext={() => setTab('compare')}
+                   nextLabel="Voir mon miroir"
+                    onModify={() => setView(p => ({ ...p, self: 'criteria' }))} />
             )}
           </div>
         )}
