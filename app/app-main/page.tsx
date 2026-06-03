@@ -178,11 +178,15 @@ export default function AppMain() {
                <ResultCard result={selfResult} loading={loadingSelf} accentColor="blue"
                   label="TU REPRÉSENTES"
                    zone={selfCriteria.zone}
-                   onNext={() => setTab('compare')
+                   onNext={() => {
+                    setTab('compare')
                     window.scrollTo({ top: 0, behavior: 'smooth' })
-                   }
+                    }}
                    nextLabel="Voir mon miroir"
-                    onModify={() => setView(p => ({ ...p, self: 'criteria' }))
+                    onModify={() => {
+                    setView(p => ({ ...p, self: 'criteria' }))
+                    window.scrollTo({ top: 0, behavior: 'smooth' })
+                    }}
                     window.scrollTo({ top: 0, behavior: 'smooth' })} />
             )}
           </div>
