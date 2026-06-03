@@ -131,13 +131,12 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
 
       {/* Carte verdict */}
       <div style={{
-        background:'#17171F',
-        borderLeft:`4px solid ${verdictColor}`,
-        border:`1px solid rgba(255,255,255,0.05)`,
-        borderLeft:`4px solid ${verdictColor}`,
-        borderRadius:'0 12px 12px 0',
-        padding:'20px'
-      }}>
+  background:'#17171F',
+  border:`1px solid rgba(255,255,255,0.05)`,
+  borderLeft:`4px solid ${verdictColor}`,
+  borderRadius:'0 12px 12px 0',
+  padding:'20px'
+}}>
         <h3 style={{fontFamily:'Syne', fontSize:'18px', fontWeight:700, color:'var(--on-surface)', marginBottom:'8px'}}>
           {verdict.verdictTitle}
         </h3>
