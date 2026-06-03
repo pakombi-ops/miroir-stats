@@ -1,0 +1,202 @@
+'use client'
+import { useState } from 'react'
+import { Criteria, getDefaultCriteria } from '@/lib/types'
+
+interface Props {
+  criteria: Criteria
+  onChange: (id: keyof Criteria, value: any) => void
+  accentColor: 'lime' | 'blue'
+  loading?: boolean
+}
+
+function ToggleGroup({ options, value, onChange, accent }: { options: string[]; value: string; onChange: (v: string) => void; accent: string }) {
+  return (
+    <div style={{ display: 'flex', flexWrap: 'wrap', gap: '8px', marginTop: '10px' }}>
+      {options.map(opt => (
+        <button key={opt} onClick={() => onChange(opt)}
+          style={{
+            padding: '6px 14px', borderRadius: '999px', fontSize: '13px', fontFamily: 'DM Sans, sans-serif',
+            fontWeight: value === opt ? 500 : 400, cursor: 'pointer', transition: 'all 0.15s',
+            background: value === opt ? accent : 'rgba(255,255,255,0.05)',
+            color: value === opt ? '#000' : 'var(--on-surface-variant)',
+            border: value === opt ? `1px solid ${accent}` : '1px solid rgba(255,255,255,0.1)',
+          }}>
+          {opt}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function SliderField({ label, value, min, max, step, onChange, format, accent }: {
+  label: string; value: number; min: number; max: number; step: number;
+  onChange: (v: number) => void; format: (v: number) => string; accent: string
+}) {
+  return (
+    <div style={{ marginTop: '10px' }}>
+      <div style={{ display: 'flex', justifyContent: 'space-between', marginBottom: '6px' }}>
+        <span style={{ fontSize: '11px', color: 'var(--on-surface-variant)', textTransform: 'uppercase', letterSpacing: '0.06em' }}>{label}</span>
+        <span style={{ fontSize: '14px', fontWeight: 500, color: accent }}>{format(value)}</span>
+      </div>
+      <input type="range" min={min} max={max} step={step} value={value}
+        onChange={e => onChange(Number(e.target.value))}
+        style={{ width: '100%', accentColor: accent, height: '4px', cursor: 'pointer' }} />
+    </div>
+  )
+}
+
+function MiniToggle({ options, value, onChange, accent }: { options: { label: string; value: string }[]; value: string; onChange: (v: string) => void; accent: string }) {
+  return (
+    <div style={{ display: 'flex', borderRadius: '8px', overflow: 'hidden', border: '1px solid rgba(255,255,255,0.1)', width: 'fit-content' }}>
+      {options.map(opt => (
+        <button key={opt.value} onClick={() => onChange(opt.value)}
+          style={{
+            padding: '4px 10px', fontSize: '11px', cursor: 'pointer', fontFamily: 'DM Sans, sans-serif',
+            background: value === opt.value ? accent : 'transparent',
+            color: value === opt.value ? '#000' : 'var(--outline)',
+            border: 'none', fontWeight: 500,
+          }}>
+          {opt.label}
+        </button>
+      ))}
+    </div>
+  )
+}
+
+function Card({ label, isActive, accent, children }: { label: string; isActive: boolean; accent: string; children: React.ReactNode }) {
+  return (
+    <div style={{
+      background: isActive ? `${accent}08` : 'var(--bg-container)',
+      border: `1px solid ${isActive ? accent + '44' : 'rgba(255,255,255,0.06)'}`,
+      borderRadius: '14px', padding: '16px', marginBottom: '12px',
+    }}>
+      <span style={{ fontSize: '11px', fontWeight: 500, letterSpacing: '0.08em', textTransform: 'uppercase', color: isActive ? accent : 'var(--outline)' }}>
+        {label}
+      </span>
+      {children}
+    </div>
+  )
+}
+
+export default function CriteriaPanel({ criteria, onChange, accentColor, loading }: Props) {
+  const def = getDefaultCriteria()
+  const accent = accentColor === 'lime' ? '#C8FF00' : '#74d1ff'
+  const set = (key: keyof Criteria, value: any) => onChange(key, value)
+
+  const revenuMax = criteria.revenuType === 'mensuel' ? 20000 : 240000
+  const revenuStep = criteria.revenuType === 'mensuel' ? 500 : 6000
+
+  const formatRevenu = (v: number) => {
+    if (v === 0) return 'Aucun minimum'
+    return `${v.toLocaleString()} € / ${criteria.revenuType === 'mensuel' ? 'mois' : 'an'}`
+  }
+
+  const formatTaille = (v: number) => {
+    if (v === 0) return 'Aucun minimum'
+    if (criteria.tailleUnit === 'cm') return `${v} cm`
+    const feet = Math.floor(v / 30.48)
+    const inches = Math.round((v / 30.48 - feet) * 12)
+    return `${feet}'${inches}"`
+  }
+
+  return (
+    <div style={{ opacity: loading ? 0.5 : 1, pointerEvents: loading ? 'none' : 'auto' }}>
+
+      {/* Genre */}
+      <Card label="Genre" isActive={criteria.genre !== def.genre} accent={accent}>
+        <ToggleGroup
+          options={['Tous', 'Femme', 'Homme', 'Non-binaire']}
+          value={criteria.genre}
+          onChange={v => set('genre', v)}
+          accent={accent}
+        />
+      </Card>
+
+      {/* Âge */}
+      <Card label="Tranche d'âge" isActive={criteria.ageMin !== def.ageMin || criteria.ageMax !== def.ageMax} accent={accent}>
+        <div style={{ fontSize: '20px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)', marginTop: '8px' }}>
+          {criteria.ageMin} – {criteria.ageMax} ans
+        </div>
+        <SliderField label="Âge minimum" value={criteria.ageMin} min={18} max={criteria.ageMax - 1} step={1}
+          onChange={v => set('ageMin', v)} format={v => `${v} ans`} accent={accent} />
+        <SliderField label="Âge maximum" value={criteria.ageMax} min={criteria.ageMin + 1} max={80} step={1}
+          onChange={v => set('ageMax', v)} format={v => `${v} ans`} accent={accent} />
+      </Card>
+
+      {/* Revenu */}
+      <Card label="Revenu minimum" isActive={criteria.revenuMin > 0} accent={accent}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+          <span style={{ fontSize: '18px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)' }}>
+            {formatRevenu(criteria.revenuMin)}
+          </span>
+          <MiniToggle
+            options={[{ label: '/mois', value: 'mensuel' }, { label: '/an', value: 'annuel' }]}
+            value={criteria.revenuType}
+            onChange={v => set('revenuType', v)}
+            accent={accent}
+          />
+        </div>
+        <SliderField label="" value={Math.min(criteria.revenuMin, revenuMax)} min={0} max={revenuMax} step={revenuStep}
+          onChange={v => set('revenuMin', v)} format={formatRevenu} accent={accent} />
+      </Card>
+
+      {/* Zone */}
+      <Card label="Zone géographique" isActive={criteria.zone !== def.zone} accent={accent}>
+        <ToggleGroup
+          options={['Monde entier', 'France', 'Europe', 'Amérique du Nord', 'Asie', 'Afrique']}
+          value={criteria.zone}
+          onChange={v => set('zone', v)}
+          accent={accent}
+        />
+      </Card>
+
+      {/* Ethnie */}
+      <Card label="Origine ethnique" isActive={criteria.ethnie !== def.ethnie} accent={accent}>
+        <ToggleGroup
+          options={['Toutes', 'Blanche', 'Noire', 'Asiatique', 'Latino', 'Arabe', 'Métissée']}
+          value={criteria.ethnie}
+          onChange={v => set('ethnie', v)}
+          accent={accent}
+        />
+      </Card>
+
+      {/* Marital */}
+      <Card label="Déjà marié(e)" isActive={criteria.dejaMarie !== def.dejaMarie} accent={accent}>
+        <ToggleGroup
+          options={['Peu importe', 'Jamais marié(e)', 'Divorcé(e)', 'Veuf/Veuve']}
+          value={criteria.dejaMarie}
+          onChange={v => set('dejaMarie', v)}
+          accent={accent}
+        />
+      </Card>
+
+      {/* Taille */}
+      <Card label="Taille minimum" isActive={criteria.tailleMin > 0} accent={accent}>
+        <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginTop: '8px' }}>
+          <span style={{ fontSize: '18px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)' }}>
+            {formatTaille(criteria.tailleMin)}
+          </span>
+          <MiniToggle
+            options={[{ label: 'cm', value: 'cm' }, { label: 'pieds', value: 'pieds' }]}
+            value={criteria.tailleUnit}
+            onChange={v => set('tailleUnit', v)}
+            accent={accent}
+          />
+        </div>
+        <SliderField label="" value={criteria.tailleMin} min={0} max={220} step={1}
+          onChange={v => set('tailleMin', v)} format={formatTaille} accent={accent} />
+      </Card>
+
+      {/* Obésité */}
+      <Card label="En obésité" isActive={criteria.obesite !== def.obesite} accent={accent}>
+        <ToggleGroup
+          options={['Peu importe', 'Non', 'Oui']}
+          value={criteria.obesite}
+          onChange={v => set('obesite', v)}
+          accent={accent}
+        />
+      </Card>
+
+    </div>
+  )
+}
