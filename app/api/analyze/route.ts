@@ -9,7 +9,7 @@ const anthropic = new Anthropic({
 
 const SYSTEM_PROMPT = `Tu es un expert en démographie mondiale. Réponds UNIQUEMENT avec un objet JSON valide (sans markdown, sans backticks, sans texte avant ou après) ayant exactement cette structure :
 {"percentage":<nombre décimal entre 0.000001 et 100>,"count":"<estimation ex: ~2,3 millions>","reasoning":"<2-3 phrases factuelles basées sur des données démographiques réelles>","confidence":"<faible|moyen|élevé>"}
-Utilise des probabilités conditionnelles réalistes. Si aucun critère actif, retourne percentage: 100.`
+IMPORTANT : Si une zone géographique est spécifiée, le percentage ET le count doivent être calculés PAR RAPPORT À LA POPULATION DE CETTE ZONE UNIQUEMENT, pas par rapport à la population mondiale. Par exemple, si la zone est "France" (68 millions), le percentage est sur 68 millions. Utilise des probabilités conditionnelles réalistes. Si aucun critère actif, retourne percentage: 100.`
 
 export async function POST(request: NextRequest) {
   try {
@@ -55,9 +55,17 @@ export async function POST(request: NextRequest) {
     }
     if (criteria.obesite && criteria.obesite !== 'Peu importe') filters.push(`- En obésité : ${criteria.obesite}`)
 
-    const userPrompt = filters.length === 0
-      ? 'Aucun critère spécifique — population mondiale complète. Retourne percentage: 100.'
-      : `Estime le pourcentage de la population mondiale correspondant à ces critères :\n${filters.join('\n')}\n\nRéponds uniquement en JSON strict.`
+    const zone = criteria.zone && criteria.zone !== 'Monde entier' ? criteria.zone : null
+
+const userPrompt = filters.length === 0
+  ? 'Aucun critère spécifique — population mondiale complète. Retourne percentage: 100.'
+  : `Estime le pourcentage de la population ${zone ? `de la zone "${zone}"` : 'mondiale'} correspondant à ces critères :
+${filters.join('\n')}
+
+${zone ? `Base de calcul : population de "${zone}" uniquement. Le percentage et le count doivent refléter cette zone, pas le monde entier.` : ''}
+
+Réponds uniquement en JSON strict.`
+
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-20250514',
