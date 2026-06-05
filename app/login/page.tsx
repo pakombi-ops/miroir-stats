@@ -13,11 +13,9 @@ export default function LoginPage() {
   const router = useRouter()
 
   useEffect(() => {
-    // Détecte WebView Android
     const ua = window.navigator.userAgent
     setIsNative(ua.includes('wv') || ua.includes('WebView'))
 
-    // Écoute la session active
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -29,13 +27,11 @@ export default function LoginPage() {
     })
   }, [])
 
-  // Envoyer magic link (web) ou OTP (app)
   const handleSend = async () => {
     if (!email) return
     setLoading(true); setError('')
 
     if (isNative) {
-      // OTP pour l'app
       const res = await fetch('/api/auth/otp', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -45,7 +41,6 @@ export default function LoginPage() {
       if (!res.ok) setError(data.error || 'Erreur envoi OTP')
       else setSent(true)
     } else {
-      // Magic link pour le web
       const res = await fetch('/api/auth/magic-link', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
@@ -58,7 +53,6 @@ export default function LoginPage() {
     setLoading(false)
   }
 
-  // Vérifier OTP (app uniquement)
   const handleVerifyOtp = async () => {
     if (!otp || otp.length !== 6) return
     setLoading(true); setError('')
@@ -76,30 +70,11 @@ export default function LoginPage() {
       return
     }
 
-    // Redirige vers le lien Supabase pour créer la session
-  if (data.actionLink) {
-    window.location.href = data.actionLink
-    return
-  }
-
-  setLoading(false)
-}
-
-    // Session créée — vérifie onboarding
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    const { data: { user } } = await supabase.auth.getUser()
-    if (user) {
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('onboarding_done')
-        .eq('id', user.id)
-        .single()
-      if (profile?.onboarding_done) router.replace('/app-main')
-      else router.replace('/onboarding')
+    if (data.actionLink) {
+      window.location.href = data.actionLink
+      return
     }
+
     setLoading(false)
   }
 
@@ -111,7 +86,6 @@ export default function LoginPage() {
     }}>
       <div style={{width:'100%', maxWidth:'380px'}}>
 
-        {/* Logo */}
         <div style={{textAlign:'center', marginBottom:'48px'}}>
           <h1 style={{fontFamily:'Syne', fontSize:'36px', fontWeight:800, color:'#C8FF00', letterSpacing:'-0.02em'}}>
             MIROIR
@@ -193,7 +167,6 @@ export default function LoginPage() {
             </div>
 
             {isNative ? (
-              // Saisie OTP pour l'app
               <>
                 <p style={{fontFamily:'Syne', fontSize:'20px', fontWeight:700, color:'#e5e2dd', marginBottom:'8px'}}>
                   Entre ton code
@@ -246,7 +219,6 @@ export default function LoginPage() {
                 </button>
               </>
             ) : (
-              // Confirmation magic link pour le web
               <>
                 <p style={{fontFamily:'Syne', fontSize:'20px', fontWeight:700, color:'#e5e2dd', marginBottom:'8px'}}>
                   Vérifie ta boîte mail
