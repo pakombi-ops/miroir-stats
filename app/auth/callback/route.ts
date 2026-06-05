@@ -3,8 +3,13 @@ import { createServerClient } from '@supabase/ssr'
 import { cookies } from 'next/headers'
 
 export async function GET(request: NextRequest) {
+  const { searchParams, origin } = new URL(request.url)
+  const code = searchParams.get('code')
+  const token = searchParams.get('token')
+  const type = searchParams.get('type')
+
   const cookieStore = await cookies()
-  
+
   const supabase = createServerClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!,
@@ -19,6 +24,17 @@ export async function GET(request: NextRequest) {
       },
     }
   )
+
+  if (code) {
+    await supabase.auth.exchangeCodeForSession(code)
+  }
+
+  if (token && type) {
+    await supabase.auth.verifyOtp({
+      token_hash: token,
+      type: type as any
+    })
+  }
 
   const { data: { user } } = await supabase.auth.getUser()
 
