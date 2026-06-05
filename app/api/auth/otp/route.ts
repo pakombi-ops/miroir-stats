@@ -88,27 +88,18 @@ export async function POST(request: NextRequest) {
 
     await supabase.from('otp_codes').delete().eq('email', email)
 
-    // Crée une vraie session
-    const { data: linkData } = await supabase.auth.admin.generateLink({
-  type: 'magiclink',
-  email,
-})
+    const generatedLink = linkData?.properties?.action_link
+    const linkUrl = new URL(generatedLink)
+    const sessionToken = linkUrl.searchParams.get('token')
+    const sessionType = linkUrl.searchParams.get('type')
 
-await supabase.from('otp_codes').delete().eq('email', email)
-
-// Retourne le token pour que le client crée la session
-const actionLink = linkData?.properties?.action_link
-const url = new URL(actionLink)
-const sessionToken = url.searchParams.get('token')
-const sessionType = url.searchParams.get('type')
-
-return NextResponse.json({ 
-  success: true, 
-  token: sessionToken,
-  type: sessionType,
-  email
-})
-    }
+    return NextResponse.json({ 
+      success: true, 
+      token: sessionToken,
+      type: sessionType,
+      email
+    })
+  }
 
   return NextResponse.json({ error: 'Action invalide' }, { status: 400 })
 }
