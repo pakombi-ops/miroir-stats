@@ -1,16 +1,12 @@
 import { NextRequest, NextResponse } from 'next/server'
 import { createClient } from '@/lib/supabase/server'
 
-
-const resend = new Resend(process.env.RESEND_API_KEY)
-
 export async function POST(request: NextRequest) {
   const body = await request.json()
   const { email, action, token } = body
 
   const supabase = await createClient()
 
-  // Envoyer OTP
   if (action === 'send') {
     const { error } = await supabase.auth.signInWithOtp({
       email,
@@ -20,7 +16,6 @@ export async function POST(request: NextRequest) {
     return NextResponse.json({ success: true })
   }
 
-  // Vérifier OTP
   if (action === 'verify') {
     const { data, error } = await supabase.auth.verifyOtp({
       email,
