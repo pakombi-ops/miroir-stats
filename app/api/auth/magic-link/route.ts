@@ -16,8 +16,14 @@ export async function POST(request: NextRequest) {
 
   if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
-  // Envoie l'email via Resend directement
-  const magicLink = data.properties?.action_link
+  // Extraire token et type du lien Supabase
+  const actionLink = data.properties?.action_link
+  const url = new URL(actionLink)
+  const token = url.searchParams.get('token')
+  const type = url.searchParams.get('type')
+
+  // Notre propre lien qui pointe directement vers notre callback
+  const magicLink = `https://www.mystandards.app/auth/callback?token=${token}&type=${type}`
 
   const res = await fetch('https://api.resend.com/emails', {
     method: 'POST',
