@@ -76,6 +76,15 @@ export default function LoginPage() {
       return
     }
 
+    // Redirige vers le lien Supabase pour créer la session
+  if (data.actionLink) {
+    window.location.href = data.actionLink
+    return
+  }
+
+  setLoading(false)
+}
+
     // Session créée — vérifie onboarding
     const supabase = createBrowserClient(
       process.env.NEXT_PUBLIC_SUPABASE_URL!,
