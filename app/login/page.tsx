@@ -18,7 +18,7 @@ export default function LoginPage() {
     setLoading(true); setError('')
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `${window.location.origin}/auth/callback` }
+      options: { emailRedirectTo: `https://miroir-stats-418c.vercel.app/auth/callback` }
     })
     if (error) setError(error.message)
     else setSent(true)
