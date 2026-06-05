@@ -14,16 +14,20 @@ export default function LoginPage() {
   )
 
   const handleSubmit = async () => {
-    if (!email) return
-    setLoading(true); setError('')
-    const { error } = await supabase.auth.signInWithOtp({
-      email,
-      options: { emailRedirectTo: 'https://www.mystandards.app/auth/callback' }
-    })
-    if (error) setError(error.message)
-    else setSent(true)
-    setLoading(false)
-  }
+  if (!email) return
+  setLoading(true); setError('')
+  
+  const res = await fetch('/api/auth/magic-link', {
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email })
+  })
+  
+  const data = await res.json()
+  if (!res.ok) setError(data.error || 'Erreur envoi email')
+  else setSent(true)
+  setLoading(false)
+}
 
   return (
     <div style={{
