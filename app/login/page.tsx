@@ -8,16 +8,6 @@ export default function LoginPage() {
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState('')
 
-
-  const isNative = window.navigator.userAgent.includes('wv') // WebView Android
-
-const redirectTo = 'https://miroir-stats-418c.vercel.app/auth/callback'
-
-const { error } = await supabase.auth.signInWithOtp({
-  email,
-  options: { emailRedirectTo: redirectTo }
-}) 
-
   const supabase = createBrowserClient(
     process.env.NEXT_PUBLIC_SUPABASE_URL!,
     process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
@@ -28,7 +18,7 @@ const { error } = await supabase.auth.signInWithOtp({
     setLoading(true); setError('')
     const { error } = await supabase.auth.signInWithOtp({
       email,
-      options: { emailRedirectTo: `https://miroir-stats-418c.vercel.app/auth/callback` }
+      options: { emailRedirectTo: 'https://miroir-stats-418c.vercel.app/auth/callback' }
     })
     if (error) setError(error.message)
     else setSent(true)
@@ -43,7 +33,6 @@ const { error } = await supabase.auth.signInWithOtp({
     }}>
       <div style={{width:'100%', maxWidth:'380px'}}>
 
-        {/* Logo */}
         <div style={{textAlign:'center', marginBottom:'48px'}}>
           <h1 style={{fontFamily:'Syne', fontSize:'36px', fontWeight:800, color:'#C8FF00', letterSpacing:'-0.02em'}}>
             MIROIR
@@ -64,7 +53,6 @@ const { error } = await supabase.auth.signInWithOtp({
               </p>
             </div>
 
-            {/* Champ email */}
             <div style={{marginBottom:'16px'}}>
               <input
                 type="email"
@@ -101,7 +89,6 @@ const { error } = await supabase.auth.signInWithOtp({
               {loading ? 'Envoi en cours…' : 'Recevoir mon lien →'}
             </button>
 
-            {/* Crédits offerts */}
             <div style={{
               marginTop:'24px', padding:'12px 16px', borderRadius:'10px',
               background:'rgba(200,255,0,0.05)', border:'1px solid rgba(200,255,0,0.15)',
