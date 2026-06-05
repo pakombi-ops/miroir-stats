@@ -12,25 +12,33 @@ export default function AuthCallbackPage() {
       process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
     )
 
-    // Récupère le token depuis l'URL
-    const hashParams = new URLSearchParams(window.location.hash.substring(1))
-    const accessToken = hashParams.get('access_token')
-    const refreshToken = hashParams.get('refresh_token')
+    const handleCallback = async () => {
+      const hashParams = new URLSearchParams(window.location.hash.substring(1))
+      const accessToken = hashParams.get('access_token')
+      const refreshToken = hashParams.get('refresh_token')
 
-    if (accessToken && refreshToken) {
-      supabase.auth.setSession({
-        access_token: accessToken,
-        refresh_token: refreshToken,
-      }).then(() => {
-        router.replace('/app-main')
-      })
-    } else {
-      // Essaie via le code dans l'URL query
-      supabase.auth.getSession().then(({ data }) => {
-        if (data.session) router.replace('/app-main')
-        else router.replace('/login')
-      })
+      if (accessToken && refreshToken) {
+        await supabase.auth.setSession({
+          access_token: accessToken,
+          refresh_token: refreshToken,
+        })
+      }
+
+      const { data: { user } } = await supabase.auth.getUser()
+      if (!user) { router.replace('/login'); return }
+
+      // Vérifie si onboarding déjà vu
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_done')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.onboarding_done) router.replace('/app-main')
+      else router.replace('/onboarding')
     }
+
+    handleCallback()
   }, [])
 
   return (
