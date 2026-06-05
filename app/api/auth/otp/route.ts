@@ -88,8 +88,8 @@ export async function POST(request: NextRequest) {
 
     await supabase.from('otp_codes').delete().eq('email', email)
 
-    const generatedLink = linkData?.properties?.action_link
-    const linkUrl = new URL(generatedLink)
+    const generatedLink = linkData?.properties?.action_link ?? ''
+    const linkUrl = new URL(generatedLink || 'https://placeholder.com')
     const sessionToken = linkUrl.searchParams.get('token')
     const sessionType = linkUrl.searchParams.get('type')
 
