@@ -13,35 +13,40 @@ export default function AuthCallbackPage() {
     )
 
     const handleCallback = async () => {
-  const code = new URLSearchParams(window.location.search).get('code')
-  console.log('CODE:', code)
-  console.log('HASH:', window.location.hash)
-  console.log('SEARCH:', window.location.search)
+      const params = new URLSearchParams(window.location.search)
+      const code = params.get('code')
+      const token = params.get('token')
+      const type = params.get('type')
 
-  if (code) {
-    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
-    console.log('EXCHANGE DATA:', data)
-    console.log('EXCHANGE ERROR:', error)
-  }
+      console.log('CODE:', code, 'TOKEN:', token, 'TYPE:', type)
 
-  const { data: { user }, error: userError } = await supabase.auth.getUser()
-  console.log('USER:', user)
-  console.log('USER ERROR:', userError)
+      if (code) {
+        const { error } = await supabase.auth.exchangeCodeForSession(code)
+        console.log('EXCHANGE ERROR:', error)
+      }
 
-  if (!user) { router.replace('/login'); return }
+      if (token && type) {
+        const { error } = await supabase.auth.verifyOtp({
+          token_hash: token,
+          type: type as any
+        })
+        console.log('VERIFY OTP ERROR:', error)
+      }
 
-  const { data: profile, error: profileError } = await supabase
-    .from('profiles')
-    .select('onboarding_done')
-    .eq('id', user.id)
-    .single()
+      const { data: { user } } = await supabase.auth.getUser()
+      console.log('USER:', user)
 
-  console.log('PROFILE:', profile)
-  console.log('PROFILE ERROR:', profileError)
+      if (!user) { router.replace('/login'); return }
 
-  if (profile?.onboarding_done) router.replace('/app-main')
-  else router.replace('/onboarding')
-}
+      const { data: profile } = await supabase
+        .from('profiles')
+        .select('onboarding_done')
+        .eq('id', user.id)
+        .single()
+
+      if (profile?.onboarding_done) router.replace('/app-main')
+      else router.replace('/onboarding')
+    }
 
     handleCallback()
   }, [])
