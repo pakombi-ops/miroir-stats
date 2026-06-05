@@ -16,7 +16,7 @@ export default function CreditsBar({ onCreditsLoaded }: CreditsBarProps) {
     fetch('/api/credits')
       .then(r => r.json())
       .then(data => {
-        const bal = data.authenticated ? (data.balance ?? 0) : 999
+        const bal = data.authenticated ? (data.balance ?? 0) : 0
         setBalance(bal)
         setAuthenticated(data.authenticated ?? false)
         onCreditsLoaded?.(bal, data.userId ?? null)

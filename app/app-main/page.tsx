@@ -6,6 +6,7 @@ import ComparePanel from '@/components/analysis/ComparePanel'
 import CreditsBar from '@/components/ui/CreditsBar'
 import { Criteria, AnalysisResult, getDefaultCriteria, getActiveCriteria } from '@/lib/types'
 import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 
 type Tab = 'search' | 'self' | 'compare'
 type View = 'criteria' | 'result'
@@ -23,6 +24,17 @@ export default function AppMain() {
   const [error, setError] = useState<string | null>(null)
   const [credits, setCredits] = useState<number | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+
+  useEffect(() => {
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+  supabase.auth.getSession().then(({ data }) => {
+    if (!data.session) router.replace('/login')
+  })
+  }, [])
+
 
   const handleCreditsLoaded = useCallback((balance: number, uid: string | null) => {
     setCredits(balance); setUserId(uid)
