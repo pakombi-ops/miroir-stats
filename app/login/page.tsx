@@ -54,44 +54,49 @@ export default function LoginPage() {
   }
 
   const handleVerifyOtp = async () => {
-    if (!otp || otp.length !== 6) return
-    setLoading(true); setError('')
+  if (!otp || otp.length !== 6) return
+  setLoading(true); setError('')
 
-    const res = await fetch('/api/auth/otp', {
+  const res = await fetch('/api/auth/otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
     body: JSON.stringify({ email, action: 'verify', token: otp })
-    })
-    const data = await res.json()
+  })
+  const data = await res.json()
 
-    if (!res.ok) {
+  if (!res.ok) {
     setError(data.error || 'Code incorrect')
     setLoading(false)
     return
-    } 
+  }
 
-    // Crée la session dans le navigateur WebView avec le access_token
-    if (data.session) {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    await supabase.auth.setSession({
-      access_token: data.session.access_token,
-      refresh_token: data.session.refresh_token,
-    })
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
 
-    const { data: profile } = await supabase
-      .from('profiles')
-      .select('onboarding_done')
-      .eq('id', data.session.user.id)
-      .single()
+  // Vérifie le token directement dans le WebView
+  const { data: verifyData, error: verifyError } = await supabase.auth.verifyOtp({
+    token_hash: data.token,
+    type: data.type as any
+  })
 
-    if (profile?.onboarding_done) router.replace('/app-main')
-    else router.replace('/onboarding')
-    }
-
+  if (verifyError || !verifyData.session) {
+    setError('Erreur de connexion')
     setLoading(false)
+    return
+  }
+
+  const { data: profile } = await supabase
+    .from('profiles')
+    .select('onboarding_done')
+    .eq('id', verifyData.session.user.id)
+    .single()
+
+  if (profile?.onboarding_done) router.replace('/app-main')
+  else router.replace('/onboarding')
+
+  setLoading(false)
 }
 
   return (
