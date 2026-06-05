@@ -1,0 +1,8 @@
+[{
+  "relation": ["delegate_permission/common.http.handle_all_urls"],
+  "target": {
+    "namespace": "android_app",
+    "package_name": "com.miroirstats.app",
+    "sha256_cert_fingerprints": ["9B:12:BF:48:00:5A:41:54:2E:F3:D7:80:EC:12:B3:85:24:7A:91:96:F1:BF:05:E9:91:68:C5:3A:73:36:2C:C9"]
+  }
+}]
