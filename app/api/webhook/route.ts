@@ -22,7 +22,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (event.type === 'checkout.session.completed') {
-    const session = event.data.object as Stripe.CheckoutSession
+    const session = event.data.object as Stripe.Checkout.Session
     const userId = session.metadata?.user_id
     const priceId = session.metadata?.price_id
     const creditsToAdd = priceId ? CREDITS_MAP[priceId] : 0
