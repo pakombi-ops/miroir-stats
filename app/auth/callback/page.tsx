@@ -13,21 +13,23 @@ export default function AuthCallbackPage() {
     )
 
     const handleCallback = async () => {
+      // Gère le code PKCE dans l'URL query
+      const code = new URLSearchParams(window.location.search).get('code')
+      if (code) {
+        await supabase.auth.exchangeCodeForSession(code)
+      }
+
+      // Gère aussi le token hash (ancien flow)
       const hashParams = new URLSearchParams(window.location.hash.substring(1))
       const accessToken = hashParams.get('access_token')
       const refreshToken = hashParams.get('refresh_token')
-
       if (accessToken && refreshToken) {
-        await supabase.auth.setSession({
-          access_token: accessToken,
-          refresh_token: refreshToken,
-        })
+        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
       }
 
       const { data: { user } } = await supabase.auth.getUser()
       if (!user) { router.replace('/login'); return }
 
-      // Vérifie si onboarding déjà vu
       const { data: profile } = await supabase
         .from('profiles')
         .select('onboarding_done')
