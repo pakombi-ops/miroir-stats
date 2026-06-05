@@ -1,5 +1,5 @@
 'use client'
-import { useState, useCallback } from 'react'
+import { useState, useCallback, useEffect } from 'react'
 import CriteriaPanel from '@/components/analysis/CriteriaPanel'
 import ResultCard from '@/components/analysis/ResultCard'
 import ComparePanel from '@/components/analysis/ComparePanel'
