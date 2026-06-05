@@ -26,12 +26,24 @@ export default function AuthCallbackPage() {
       }
 
       if (token && type) {
-        const { error } = await supabase.auth.verifyOtp({
-          token_hash: token,
-          type: type as any
-        })
-        console.log('VERIFY OTP ERROR:', error)
-      }
+  const { data, error } = await supabase.auth.verifyOtp({
+    token_hash: token,
+    type: 'magiclink'
+  })
+  console.log('VERIFY OTP DATA:', data)
+  console.log('VERIFY OTP ERROR:', error)
+  
+  // Si token_hash échoue, essaie avec email+token
+  if (error) {
+    const { data: data2, error: error2 } = await supabase.auth.verifyOtp({
+      email: data?.user?.email ?? '',
+      token,
+      type: 'magiclink'
+    })
+    console.log('VERIFY OTP2 DATA:', data2)
+    console.log('VERIFY OTP2 ERROR:', error2)
+  }
+}
 
       const { data: { user } } = await supabase.auth.getUser()
       console.log('USER:', user)
