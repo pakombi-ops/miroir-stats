@@ -67,8 +67,9 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Code invalide ou expiré' }, { status: 400 })
     }
 
-    const { data: userData } = await supabase.auth.admin.getUserByEmail(email)
-    let userId = userData?.user?.id
+    const { data: { users } } = await supabase.auth.admin.listUsers()
+    const existingUser = users.find(u => u.email === email)
+    let userId = existingUser?.id
 
     if (!userId) {
       const { data: newUser } = await supabase.auth.admin.createUser({
