@@ -13,32 +13,35 @@ export default function AuthCallbackPage() {
     )
 
     const handleCallback = async () => {
-      // Gère le code PKCE dans l'URL query
-      const code = new URLSearchParams(window.location.search).get('code')
-      if (code) {
-        await supabase.auth.exchangeCodeForSession(code)
-      }
+  const code = new URLSearchParams(window.location.search).get('code')
+  console.log('CODE:', code)
+  console.log('HASH:', window.location.hash)
+  console.log('SEARCH:', window.location.search)
 
-      // Gère aussi le token hash (ancien flow)
-      const hashParams = new URLSearchParams(window.location.hash.substring(1))
-      const accessToken = hashParams.get('access_token')
-      const refreshToken = hashParams.get('refresh_token')
-      if (accessToken && refreshToken) {
-        await supabase.auth.setSession({ access_token: accessToken, refresh_token: refreshToken })
-      }
+  if (code) {
+    const { data, error } = await supabase.auth.exchangeCodeForSession(code)
+    console.log('EXCHANGE DATA:', data)
+    console.log('EXCHANGE ERROR:', error)
+  }
 
-      const { data: { user } } = await supabase.auth.getUser()
-      if (!user) { router.replace('/login'); return }
+  const { data: { user }, error: userError } = await supabase.auth.getUser()
+  console.log('USER:', user)
+  console.log('USER ERROR:', userError)
 
-      const { data: profile } = await supabase
-        .from('profiles')
-        .select('onboarding_done')
-        .eq('id', user.id)
-        .single()
+  if (!user) { router.replace('/login'); return }
 
-      if (profile?.onboarding_done) router.replace('/app-main')
-      else router.replace('/onboarding')
-    }
+  const { data: profile, error: profileError } = await supabase
+    .from('profiles')
+    .select('onboarding_done')
+    .eq('id', user.id)
+    .single()
+
+  console.log('PROFILE:', profile)
+  console.log('PROFILE ERROR:', profileError)
+
+  if (profile?.onboarding_done) router.replace('/app-main')
+  else router.replace('/onboarding')
+}
 
     handleCallback()
   }, [])
