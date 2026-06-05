@@ -88,10 +88,11 @@ export async function POST(request: NextRequest) {
 
     await supabase.from('otp_codes').delete().eq('email', email)
 
-    const actionLink = linkData?.properties?.action_link
+    // Crée une vraie session
+    const { data: sessionData } = await supabase.auth.admin.createSession(userId!)
 
-    return NextResponse.json({ success: true, actionLink })
-  }
+    return NextResponse.json({ success: true, session: sessionData.session })
+    }
 
   return NextResponse.json({ error: 'Action invalide' }, { status: 400 })
 }

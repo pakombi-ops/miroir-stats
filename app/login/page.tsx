@@ -58,25 +58,41 @@ export default function LoginPage() {
     setLoading(true); setError('')
 
     const res = await fetch('/api/auth/otp', {
-      method: 'POST',
-      headers: { 'Content-Type': 'application/json' },
-      body: JSON.stringify({ email, action: 'verify', token: otp })
+    method: 'POST',
+    headers: { 'Content-Type': 'application/json' },
+    body: JSON.stringify({ email, action: 'verify', token: otp })
     })
     const data = await res.json()
 
     if (!res.ok) {
-      setError(data.error || 'Code incorrect')
-      setLoading(false)
-      return
-    }
+    setError(data.error || 'Code incorrect')
+    setLoading(false)
+    return
+    } 
 
-    if (data.actionLink) {
-      window.location.href = data.actionLink
-      return
+    // Crée la session dans le navigateur WebView avec le access_token
+    if (data.session) {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    await supabase.auth.setSession({
+      access_token: data.session.access_token,
+      refresh_token: data.session.refresh_token,
+    })
+
+    const { data: profile } = await supabase
+      .from('profiles')
+      .select('onboarding_done')
+      .eq('id', data.session.user.id)
+      .single()
+
+    if (profile?.onboarding_done) router.replace('/app-main')
+    else router.replace('/onboarding')
     }
 
     setLoading(false)
-  }
+}
 
   return (
     <div style={{
