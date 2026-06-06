@@ -1,6 +1,7 @@
 'use client'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 
 const PACKS = [
   {
@@ -37,7 +38,18 @@ const PACKS = [
 
 export default function PricingPage() {
   const [loading, setLoading] = useState<string | null>(null)
+  const [userId, setUserId] = useState<string | null>(null)
   const router = useRouter()
+
+  useEffect(() => {
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    supabase.auth.getUser().then(({ data: { user } }) => {
+      if (user) setUserId(user.id)
+    })
+  }, [])
 
   const handleBuy = async (priceId: string, packId: string) => {
     setLoading(packId)
@@ -45,21 +57,22 @@ export default function PricingPage() {
       const res = await fetch('/api/checkout', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ priceId }),
+        body: JSON.stringify({ priceId, userId }),
       })
       const data = await res.json()
       if (res.status === 401) { router.push('/login'); return }
       if (data.url) window.location.href = data.url
-    } catch { setLoading(null) }
+    } catch {}
+    setLoading(null)
   }
 
   return (
     <div style={{minHeight:'100vh', backgroundColor:'#0A0A0F', padding:'24px'}}>
 
       {/* Header */}
-      <div style={{textAlign:'center', marginBottom:'40px', paddingTop:'40px'}}>
+      <div style={{textAlign:'center', marginBottom:'40px', paddingTop:'40px', position:'relative'}}>
         <button onClick={() => router.back()}
-          style={{position:'absolute', left:'20px', top:'24px', background:'none', border:'none', color:'#8e9479', cursor:'pointer', fontSize:'24px'}}>
+          style={{position:'absolute', left:'0', top:'0', background:'none', border:'none', color:'#8e9479', cursor:'pointer', fontSize:'24px'}}>
           ‹
         </button>
         <h1 style={{fontFamily:'Syne', fontSize:'28px', fontWeight:800, color:'#C8FF00', letterSpacing:'-0.02em'}}>
