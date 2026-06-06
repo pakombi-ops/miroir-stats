@@ -60,11 +60,15 @@ export default function PricingPage() {
         body: JSON.stringify({ priceId, userId }),
       })
       const data = await res.json()
-      if (res.status === 401) { router.push('/login'); return }
-      if (data.url) window.location.href = data.url
-    } catch {}
-    setLoading(null)
+    console.log('CHECKOUT RESPONSE:', res.status, data)
+    if (res.status === 401) { router.push('/login'); return }
+    if (data.url) window.location.href = data.url
+    else console.log('PAS D URL:', data)
+  } catch (err) {
+    console.error('CHECKOUT ERROR:', err)
   }
+  setLoading(null)
+}
 
   return (
     <div style={{minHeight:'100vh', backgroundColor:'#0A0A0F', padding:'24px'}}>
