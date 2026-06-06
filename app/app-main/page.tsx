@@ -35,10 +35,7 @@ export default function AppMain() {
   })
   }, [])
 
-  const handleCreditsLoaded = useCallback((balance: number, uid: string | null) => {
-  console.log('CREDITS LOADED - balance:', balance, 'userId:', uid)
-  setCredits(balance); setUserId(uid)
-}, [])
+  
 
   const handleCreditsLoaded = useCallback((balance: number, uid: string | null) => {
     setCredits(balance); setUserId(uid)
