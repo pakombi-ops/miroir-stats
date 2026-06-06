@@ -1,7 +1,7 @@
 'use client'
-
 import { useEffect, useState } from 'react'
 import { useRouter } from 'next/navigation'
+import { createBrowserClient } from '@supabase/ssr'
 
 interface CreditsBarProps {
   onCreditsLoaded?: (balance: number, userId: string | null) => void
@@ -13,15 +13,34 @@ export default function CreditsBar({ onCreditsLoaded }: CreditsBarProps) {
   const router = useRouter()
 
   useEffect(() => {
-    fetch('/api/credits')
-      .then(r => r.json())
-      .then(data => {
-        const bal = data.authenticated ? (data.balance ?? 0) : 0
-        setBalance(bal)
-        setAuthenticated(data.authenticated ?? false)
-        onCreditsLoaded?.(bal, data.userId ?? null)
-      })
-      .catch(() => { setBalance(999); onCreditsLoaded?.(999, null) })
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+
+    const loadCredits = async () => {
+      const { data: { user } } = await supabase.auth.getUser()
+
+      if (!user) {
+        setBalance(0)
+        setAuthenticated(false)
+        onCreditsLoaded?.(0, null)
+        return
+      }
+
+      const { data } = await supabase
+        .from('credits')
+        .select('balance')
+        .eq('user_id', user.id)
+        .single()
+
+      const bal = data?.balance ?? 0
+      setBalance(bal)
+      setAuthenticated(true)
+      onCreditsLoaded?.(bal, user.id)
+    }
+
+    loadCredits()
   }, [])
 
   return (
