@@ -143,22 +143,37 @@ export default function ShareCardModal({ ratio, searchPct, selfPct, onClose }: S
   }, [format, drawOnCanvas])
 
   // ── Téléchargement HD côté client ────────────────────────────────────────────
-  function downloadHD() {
-    const tmp     = document.createElement('canvas')
-    const isSquare = format === 'square'
-    tmp.width  = 1080
-    tmp.height = isSquare ? 1080 : 1920
-    drawOnCanvas(tmp, tmp.width, tmp.height)
-    tmp.toBlob((blob) => {
-      if (!blob) return
-      const url = URL.createObjectURL(blob)
-      const a   = document.createElement('a')
-      a.href     = url
-      a.download = `miroirstats_${format}_${ratio}x.png`
-      a.click()
-      URL.revokeObjectURL(url)
-    }, 'image/png')
+  ffunction downloadHD() {
+  const tmp = document.createElement('canvas')
+  tmp.width  = 1080
+  tmp.height = format === 'square' ? 1080 : 1920
+  drawOnCanvas(tmp, tmp.width, tmp.height)
+
+  const dataUrl = tmp.toDataURL('image/png')
+
+  // Détecte si on est dans le WebView Capacitor
+  const isCapacitor = typeof window !== 'undefined' && !!(window as any).Capacitor
+
+  console.log('isCapacitor:', isCapacitor)
+console.log('window.Capacitor:', (window as any).Capacitor)
+
+  if (isCapacitor) {
+    // Ouvre dans un nouvel onglet → appui long pour enregistrer
+    const w = window.open()
+    if (w) {
+      w.document.write(`<img src="${dataUrl}" style="max-width:100%;display:block;" />`)
+      w.document.title = `miroirstats_${format}_${ratio}x`
+    }
+  } else {
+    // Web normal → téléchargement direct
+    const a = document.createElement('a')
+    a.href     = dataUrl
+    a.download = `miroirstats_${format}_${ratio}x.png`
+    document.body.appendChild(a)
+    a.click()
+    document.body.removeChild(a)
   }
+}
 
   // ── Génération phrase via API ────────────────────────────────────────────────
   async function generatePhrase() {
