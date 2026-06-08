@@ -30,6 +30,10 @@ export async function POST(request: NextRequest) {
       cancel_url: `${process.env.NEXT_PUBLIC_APP_URL}/pricing`,
       customer_email: user.email,
       metadata: { user_id: userId, price_id: priceId },
+      custom_text: {
+        submit: { message: 'Tes crédits seront disponibles immédiatement après le paiement.' }
+      },
+      locale: 'fr',
     })
 
     return NextResponse.json({ url: session.url })

@@ -1,7 +1,7 @@
 <?xml version='1.0' encoding='utf-8'?>
 <resources>
-    <string name="app_name">MiroirStats</string>
-    <string name="title_activity_main">MiroirStats</string>
+    <string name="app_name">MiroirMiroir</string>
+    <string name="title_activity_main">MiroirMiroir</string>
     <string name="package_name">com.miroirstats.app</string>
     <string name="custom_url_scheme">com.miroirstats.app</string>
 </resources>

@@ -1,5 +1,8 @@
 'use client'
 import { AnalysisResult, getComparisonVerdict, formatPercentage } from '@/lib/types'
+import { useState } from 'react'
+import ShareCardModal from '@/components/analysis/ShareCardModal'
+
 
 interface ComparePanelProps {
   searchResult: AnalysisResult | null
@@ -33,6 +36,7 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
   const verdict = getComparisonVerdict(searchResult.percentage, selfResult.percentage)
   const ratioStr = verdict.ratio > 100 ? `>${Math.round(verdict.ratio)}x` : `${verdict.ratio.toFixed(1)}x`
   const isHigh = verdict.ratio > 5
+  const [showShareModal, setShowShareModal] = useState(false)
 
   // Couleur dynamique selon le ratio
   const verdictColor = verdict.ratio <= 0.5 ? '#a8d700'
@@ -146,6 +150,32 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
           {' '}que toi. {verdict.verdictDesc}
         </p>
       </div>
+    <button
+       onClick={() => setShowShareModal(true)}
+        style={{
+        marginTop: '20px',
+        padding: '12px 24px',
+        borderRadius: '12px',
+        background: 'rgba(200,255,0,0.1)',
+        color: '#C8FF00',
+        border: '1px solid rgba(200,255,0,0.25)',
+        fontSize: '14px',
+        fontWeight: 500,
+        cursor: 'pointer',
+        display: 'flex',
+        alignItems: 'center',
+        gap: '8px',
+        width: '100%',
+        justifyContent: 'center',
+      }}
+      >
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+      </svg>
+      Partager ma carte
+    </button>
+
 
       {/* Boutons */}
       <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
@@ -202,6 +232,15 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
         Données basées sur les statistiques démographiques mondiales 2024.<br/>
         Analyse algorithmique MiroirStats v4.2.
       </p>
+
+      {showShareModal && verdict && (
+  <ShareCardModal
+    ratio={verdict.ratio}
+    searchPct={parseFloat(searchResult.percentage.toFixed(2))}
+    selfPct={parseFloat(selfResult.percentage.toFixed(2))}
+    onClose={() => setShowShareModal(false)}
+  />
+)}
     </div>
   )
 }
