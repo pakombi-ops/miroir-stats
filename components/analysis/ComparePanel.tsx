@@ -63,22 +63,22 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
       setPhrase(data.phrase || '')
     } catch { /* silencieux — on partage sans phrase si erreur */ }
 
-    const text = [
-  phrase ? `"${phrase}"` : '',
-  '',
-  `📊 J'ai testé MiroirMiroir, l'app qui calcule ton ratio d'exigence en amour.`,
-  '',
-  `Ce que je cherche : ${formatPercentage(searchResult.percentage)}% de la population mondiale correspond à mes critères.`,
-  `Ce que je suis : je représente moi-même ${formatPercentage(selfResult.percentage)}% de la population.`,
-  `Mon ratio d'exigence : ${ratioStr} 👀`,
-  '',
-  `Autrement dit — je cherche quelqu'un ${ratioStr} plus rare que moi.`,
-  '',
-  `Teste toi-même et découvre ton ratio 👇`,
-  `mystandards.app`,
-].filter(Boolean).join('\n')
+  const text = [
+   `📊 J'ai testé MiroirMiroir, l'app qui calcule ton ratio d'exigence en amour.`,
+    '',
+    phrase ? `J'hallucine, regarde ce qu'elle dit de moi : "${phrase}"` : '',
+    '',
+    `Ce que je cherche : ${formatPercentage(searchResult.percentage)}% de la population mondiale correspond à mes critères.`,
+    `Ce que je suis : je représente moi-même ${formatPercentage(selfResult.percentage)}% de la population.`,
+    `Mon ratio d'exigence : ${ratioStr} 👀`,
+    '',
+    `Autrement dit — je cherche quelqu'un ${ratioStr} plus rare que moi.`,
+    '',
+    `Teste toi-même et découvre ton ratio 👇`,
+    `mystandards.app`,
+    ].filter(Boolean).join('\n')
 
-    setSharing(false)
+ setSharing(false)
 
     if (navigator.share) {
       navigator.share({
