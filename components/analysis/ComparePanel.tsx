@@ -12,6 +12,8 @@ interface ComparePanelProps {
 
 export default function ComparePanel({ searchResult, selfResult, onAdjust }: ComparePanelProps) {
 
+  const [showShareModal, setShowShareModal] = useState(false)
+
   if (!searchResult || !selfResult) {
     return (
       <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'80px 0', textAlign:'center', gap:'16px'}}>
@@ -36,7 +38,7 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
   const verdict = getComparisonVerdict(searchResult.percentage, selfResult.percentage)
   const ratioStr = verdict.ratio > 100 ? `>${Math.round(verdict.ratio)}x` : `${verdict.ratio.toFixed(1)}x`
   const isHigh = verdict.ratio > 5
-  const [showShareModal, setShowShareModal] = useState(false)
+  
 
   // Couleur dynamique selon le ratio
   const verdictColor = verdict.ratio <= 0.5 ? '#a8d700'
