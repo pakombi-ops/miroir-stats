@@ -52,7 +52,7 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust, viral
     setSharing(true)
 
     const text = [
-      `📊 J'ai testé MiroirStats, l'app qui calcule ton ratio d'exigence en amour.`,
+      `📊 J'ai testé MiroirMiroir, l'app qui calcule ton ratio d'exigence en amour.`,
       '',
       phrase ? `J'hallucine, regarde ce qu'elle dit de moi : "${phrase}"` : '',
       '',
@@ -62,7 +62,7 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust, viral
       '',
       `Autrement dit — je cherche quelqu'un ${ratioStr} plus rare que moi.`,
       '',
-      `Teste toi-même et découvre ton ratio 👇`,
+      `Teste toi-même et découvre ton ratio en téléchargeant l'appli ou sur le site 👇`,
       `mystandards.app`,
     ].filter(Boolean).join('\n')
 
