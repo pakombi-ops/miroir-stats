@@ -1,16 +1,22 @@
 'use client'
 import { AnalysisResult, getComparisonVerdict, formatPercentage } from '@/lib/types'
-import { useState } from 'react'
+import { useState, useEffect } from 'react'
 
 interface ComparePanelProps {
   searchResult: AnalysisResult | null
   selfResult: AnalysisResult | null
   onAdjust?: () => void
+  viralPhrase?: string
 }
 
-export default function ComparePanel({ searchResult, selfResult, onAdjust }: ComparePanelProps) {
+export default function ComparePanel({ searchResult, selfResult, onAdjust, viralPhrase = '' }: ComparePanelProps) {
   const [sharing, setSharing] = useState(false)
-  const [phrase, setPhrase] = useState('')
+  const [phrase, setPhrase] = useState(viralPhrase)
+
+  // Met à jour la phrase quand elle arrive (générée en arrière-plan)
+  useEffect(() => {
+    if (viralPhrase) setPhrase(viralPhrase)
+  }, [viralPhrase])
 
   if (!searchResult || !selfResult) {
     return (
@@ -36,7 +42,6 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
   const verdict  = getComparisonVerdict(searchResult.percentage, selfResult.percentage)
   const ratioStr = verdict.ratio > 100 ? `>${Math.round(verdict.ratio)}x` : `${verdict.ratio.toFixed(1)}x`
   const isHigh   = verdict.ratio > 5
-  
 
   const verdictColor = verdict.ratio <= 0.5 ? '#a8d700'
     : verdict.ratio <= 1.5 ? '#C8FF00'
@@ -46,46 +51,29 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
   const handleShare = async () => {
     setSharing(true)
 
-    // Génère la phrase choc via Claude
-    let phrase = ''
-    try {
-      const res  = await fetch('/api/share-card/phrase', {
-        method:  'POST',
-        headers: { 'Content-Type': 'application/json' },
-        body:    JSON.stringify({
-          ratio:     verdict.ratio,
-          searchPct: searchResult.percentage,
-          selfPct:   selfResult.percentage,
-        }),
-      })
-      const data = await res.json()
-      phrase = data.phrase || ''
-      setPhrase(data.phrase || '')
-    } catch { /* silencieux — on partage sans phrase si erreur */ }
-
-  const text = [
-   `📊 J'ai testé MiroirMiroir, l'app qui calcule ton ratio d'exigence en amour.`,
-    '',
-    phrase ? `J'hallucine, regarde ce qu'elle dit de moi : "${phrase}"` : '',
-    '',
-    `Ce que je cherche : ${formatPercentage(searchResult.percentage)}% de la population mondiale correspond à mes critères.`,
-    `Ce que je suis : je représente moi-même ${formatPercentage(selfResult.percentage)}% de la population.`,
-    `Mon ratio d'exigence : ${ratioStr} 👀`,
-    '',
-    `Autrement dit — je cherche quelqu'un ${ratioStr} plus rare que moi.`,
-    '',
-    `Teste toi-même et découvre ton ratio 👇`,
-    `mystandards.app`,
+    const text = [
+      `📊 J'ai testé MiroirStats, l'app qui calcule ton ratio d'exigence en amour.`,
+      '',
+      phrase ? `J'hallucine, regarde ce qu'elle dit de moi : "${phrase}"` : '',
+      '',
+      `Ce que je cherche : ${formatPercentage(searchResult.percentage)}% de la population mondiale correspond à mes critères.`,
+      `Ce que je suis : je représente moi-même ${formatPercentage(selfResult.percentage)}% de la population.`,
+      `Mon ratio d'exigence : ${ratioStr} 👀`,
+      '',
+      `Autrement dit — je cherche quelqu'un ${ratioStr} plus rare que moi.`,
+      '',
+      `Teste toi-même et découvre ton ratio 👇`,
+      `mystandards.app`,
     ].filter(Boolean).join('\n')
 
- setSharing(false)
+    setSharing(false)
 
     if (navigator.share) {
       navigator.share({
         title: `Mon ratio d'exigence — MiroirStats`,
         text,
         url: 'https://mystandards.app',
-      }).catch(() => {/* annulé par l'utilisateur */})
+      }).catch(() => {})
     } else {
       navigator.clipboard.writeText(text)
         .then(() => alert('Copié dans le presse-papier !'))
@@ -195,27 +183,45 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
       </div>
 
       {/* Phrase choc Claude */}
-{phrase && (
-  <div style={{
-    textAlign: 'center',
-    padding: '20px 24px',
-    background: 'rgba(200,255,0,0.04)',
-    border: '1px solid rgba(200,255,0,0.12)',
-    borderRadius: '12px',
-  }}>
-    <p style={{
-      fontFamily: 'Syne',
-      fontSize: '16px',
-      fontWeight: 700,
-      color: '#C8FF00',
-      lineHeight: '1.5',
-      margin: 0,
-      fontStyle: 'italic',
-    }}>
-      "{phrase}"
-    </p>
-  </div>
-)}
+      {phrase ? (
+        <div style={{
+          textAlign: 'center',
+          padding: '20px 24px',
+          background: 'rgba(200,255,0,0.04)',
+          border: '1px solid rgba(200,255,0,0.12)',
+          borderRadius: '12px',
+        }}>
+          <p style={{
+            fontFamily: 'Syne',
+            fontSize: '16px',
+            fontWeight: 700,
+            color: '#C8FF00',
+            lineHeight: '1.5',
+            margin: 0,
+            fontStyle: 'italic',
+          }}>
+            "{phrase}"
+          </p>
+        </div>
+      ) : (
+        <div style={{
+          textAlign: 'center',
+          padding: '20px 24px',
+          background: 'rgba(255,255,255,0.02)',
+          border: '1px solid rgba(255,255,255,0.06)',
+          borderRadius: '12px',
+        }}>
+          <p style={{
+            fontFamily: 'DM Sans',
+            fontSize: '13px',
+            color: 'rgba(255,255,255,0.2)',
+            margin: 0,
+            fontStyle: 'italic',
+          }}>
+            ✦ Analyse en cours…
+          </p>
+        </div>
+      )}
 
       {/* Boutons */}
       <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
@@ -242,7 +248,7 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
               <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{animation:'spin 1s linear infinite'}}>
                 <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
               </svg>
-              Génération en cours…
+              Préparation…
             </>
           ) : (
             <>
@@ -290,6 +296,7 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
 
       <style>{`
         @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+        @keyframes fadeInUp { from { opacity: 0; transform: translateY(12px) } to { opacity: 1; transform: translateY(0) } }
       `}</style>
     </div>
   )

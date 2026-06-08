@@ -4,7 +4,7 @@ import CriteriaPanel from '@/components/analysis/CriteriaPanel'
 import ResultCard from '@/components/analysis/ResultCard'
 import ComparePanel from '@/components/analysis/ComparePanel'
 import CreditsBar from '@/components/ui/CreditsBar'
-import { Criteria, AnalysisResult, getDefaultCriteria, getActiveCriteria } from '@/lib/types'
+import { Criteria, AnalysisResult, getDefaultCriteria, getActiveCriteria, getComparisonVerdict } from '@/lib/types'
 import { useRouter } from 'next/navigation'
 import { createBrowserClient } from '@supabase/ssr'
 
@@ -24,22 +24,38 @@ export default function AppMain() {
   const [error, setError] = useState<string | null>(null)
   const [credits, setCredits] = useState<number | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
+  const [viralPhrase, setViralPhrase] = useState('')
 
   useEffect(() => {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
-  supabase.auth.getSession().then(({ data }) => {
-    if (!data.session) router.replace('/login')
-  })
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) router.replace('/login')
+    })
   }, [])
-
-  
 
   const handleCreditsLoaded = useCallback((balance: number, uid: string | null) => {
     setCredits(balance); setUserId(uid)
   }, [])
+
+  const generateViralPhrase = async (search: AnalysisResult, self: AnalysisResult) => {
+    const verdict = getComparisonVerdict(search.percentage, self.percentage)
+    try {
+      const res = await fetch('/api/share-card/phrase', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          ratio:     verdict.ratio,
+          searchPct: search.percentage,
+          selfPct:   self.percentage,
+        }),
+      })
+      const data = await res.json()
+      if (data.phrase) setViralPhrase(data.phrase)
+    } catch { /* silencieux */ }
+  }
 
   const updateSearchCriteria = (id: keyof Criteria, value: any) => {
     setSearchCriteria(p => ({ ...p, [id]: value }))
@@ -67,6 +83,12 @@ export default function AppMain() {
       if (!res.ok) throw new Error('Erreur serveur')
       const data = await res.json()
       setResult(data)
+
+      // Génère la phrase virale en arrière-plan dès que les deux résultats sont dispo
+      if (type === 'self' && searchResult) {
+        generateViralPhrase(searchResult, data)
+      }
+
       if (credits !== null && userId) setCredits(c => Math.max(0, (c ?? 1) - 1))
       setView(prev => ({ ...prev, [type]: 'result' }))
       window.scrollTo({ top: 0, behavior: 'smooth' })
@@ -149,15 +171,17 @@ export default function AppMain() {
               <ResultCard result={searchResult} loading={loadingSearch} accentColor="lime"
                 label="CE QUE TU CHERCHES REPRÉSENTE"
                 zone={searchCriteria.zone}
-                onNext={() => { setTab('self'); setView(p => ({ ...p, self: 'criteria' }))
-                window.scrollTo({ top: 0, behavior: 'smooth' }) 
-              }}
+                onNext={() => {
+                  setTab('self')
+                  setView(p => ({ ...p, self: 'criteria' }))
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
                 nextLabel="Analyser mon profil"
                 onModify={() => {
-                setView(p => ({ ...p, search: 'criteria' }))
-                window.scrollTo({ top: 0, behavior: 'smooth' })
-              }}
-                />
+                  setView(p => ({ ...p, search: 'criteria' }))
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              />
             )}
           </div>
         )}
@@ -188,18 +212,19 @@ export default function AppMain() {
             )}
 
             {currentView === 'result' && (
-               <ResultCard result={selfResult} loading={loadingSelf} accentColor="blue"
-                  label="TU REPRÉSENTES"
-                   zone={selfCriteria.zone}
-                   onNext={() => {
-                    setTab('compare')
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                    }}
-                   nextLabel="Voir mon miroir"
-                    onModify={() => {
-                    setView(p => ({ ...p, self: 'criteria' }))
-                    window.scrollTo({ top: 0, behavior: 'smooth' })
-                    }} />
+              <ResultCard result={selfResult} loading={loadingSelf} accentColor="blue"
+                label="TU REPRÉSENTES"
+                zone={selfCriteria.zone}
+                onNext={() => {
+                  setTab('compare')
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+                nextLabel="Voir mon miroir"
+                onModify={() => {
+                  setView(p => ({ ...p, self: 'criteria' }))
+                  window.scrollTo({ top: 0, behavior: 'smooth' })
+                }}
+              />
             )}
           </div>
         )}
@@ -212,10 +237,11 @@ export default function AppMain() {
               <p style={{ fontSize: '10px', color: 'var(--outline)', textTransform: 'uppercase', letterSpacing: '0.1em' }}>Ton analyse complète</p>
             </div>
             <ComparePanel
-  searchResult={searchResult}
-  selfResult={selfResult}
-  onAdjust={() => { setTab('search'); setView(p => ({ ...p, search: 'criteria' })) }}
-/>
+              searchResult={searchResult}
+              selfResult={selfResult}
+              viralPhrase={viralPhrase}
+              onAdjust={() => { setTab('search'); setView(p => ({ ...p, search: 'criteria' })) }}
+            />
           </div>
         )}
       </div>
