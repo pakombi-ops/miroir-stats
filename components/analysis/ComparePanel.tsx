@@ -1,8 +1,6 @@
 'use client'
 import { AnalysisResult, getComparisonVerdict, formatPercentage } from '@/lib/types'
 import { useState } from 'react'
-import ShareCardModal from '@/components/analysis/ShareCardModal'
-
 
 interface ComparePanelProps {
   searchResult: AnalysisResult | null
@@ -11,9 +9,9 @@ interface ComparePanelProps {
 }
 
 export default function ComparePanel({ searchResult, selfResult, onAdjust }: ComparePanelProps) {
-
-  const [showShareModal, setShowShareModal] = useState(false)
-
+  const [sharing, setSharing] = useState(false)
+  const [phrase, setPhrase] = useState('')
+  
   if (!searchResult || !selfResult) {
     return (
       <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'80px 0', textAlign:'center', gap:'16px'}}>
@@ -35,21 +33,59 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
     )
   }
 
-  const verdict = getComparisonVerdict(searchResult.percentage, selfResult.percentage)
+  const verdict  = getComparisonVerdict(searchResult.percentage, selfResult.percentage)
   const ratioStr = verdict.ratio > 100 ? `>${Math.round(verdict.ratio)}x` : `${verdict.ratio.toFixed(1)}x`
-  const isHigh = verdict.ratio > 5
+  const isHigh   = verdict.ratio > 5
   
 
-  // Couleur dynamique selon le ratio
   const verdictColor = verdict.ratio <= 0.5 ? '#a8d700'
     : verdict.ratio <= 1.5 ? '#C8FF00'
-    : verdict.ratio <= 5  ? '#FFB800'
+    : verdict.ratio <= 5   ? '#FFB800'
     : '#FF5C4D'
 
-  const handleShare = () => {
-    const text = `J'ai testé MiroirStats — je cherche ${formatPercentage(searchResult.percentage)}% de la population mais je représente ${formatPercentage(selfResult.percentage)}%. Ratio d'exigence : ${ratioStr} 👀`
-    if (navigator.share) navigator.share({ title: 'Mon MiroirStats', text, url: window.location.origin })
-    else navigator.clipboard.writeText(text).then(() => alert('Copié dans le presse-papier !'))
+  const handleShare = async () => {
+    setSharing(true)
+
+    // Génère la phrase choc via Claude
+    let phrase = ''
+    try {
+      const res  = await fetch('/api/share-card/phrase', {
+        method:  'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body:    JSON.stringify({
+          ratio:     verdict.ratio,
+          searchPct: searchResult.percentage,
+          selfPct:   selfResult.percentage,
+        }),
+      })
+      const data = await res.json()
+      phrase = data.phrase || ''
+      setPhrase(data.phrase || '')
+    } catch { /* silencieux — on partage sans phrase si erreur */ }
+
+    const text = [
+      phrase,
+      '',
+      `Je cherche ${formatPercentage(searchResult.percentage)}% de la population mondiale.`,
+      `Je représente moi-même ${formatPercentage(selfResult.percentage)}%.`,
+      `Mon ratio d'exigence : ${ratioStr} 👀`,
+      '',
+      'mystandards.app',
+    ].filter(Boolean).join('\n')
+
+    setSharing(false)
+
+    if (navigator.share) {
+      navigator.share({
+        title: `Mon ratio d'exigence — MiroirStats`,
+        text,
+        url: 'https://mystandards.app',
+      }).catch(() => {/* annulé par l'utilisateur */})
+    } else {
+      navigator.clipboard.writeText(text)
+        .then(() => alert('Copié dans le presse-papier !'))
+        .catch(() => alert('Impossible de copier. Réessaie.'))
+    }
   }
 
   return (
@@ -137,12 +173,12 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
 
       {/* Carte verdict */}
       <div style={{
-  background:'#17171F',
-  border:`1px solid rgba(255,255,255,0.05)`,
-  borderLeft:`4px solid ${verdictColor}`,
-  borderRadius:'0 12px 12px 0',
-  padding:'20px'
-}}>
+        background:'#17171F',
+        border:'1px solid rgba(255,255,255,0.05)',
+        borderLeft:`4px solid ${verdictColor}`,
+        borderRadius:'0 12px 12px 0',
+        padding:'20px'
+      }}>
         <h3 style={{fontFamily:'Syne', fontSize:'18px', fontWeight:700, color:'var(--on-surface)', marginBottom:'8px'}}>
           {verdict.verdictTitle}
         </h3>
@@ -152,55 +188,67 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
           {' '}que toi. {verdict.verdictDesc}
         </p>
       </div>
-    <button
-       onClick={() => setShowShareModal(true)}
-        style={{
-        marginTop: '20px',
-        padding: '12px 24px',
-        borderRadius: '12px',
-        background: 'rgba(200,255,0,0.1)',
-        color: '#C8FF00',
-        border: '1px solid rgba(200,255,0,0.25)',
-        fontSize: '14px',
-        fontWeight: 500,
-        cursor: 'pointer',
-        display: 'flex',
-        alignItems: 'center',
-        gap: '8px',
-        width: '100%',
-        justifyContent: 'center',
-      }}
-      >
-      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
-      <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-      <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/><line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-      </svg>
-      Partager ma carte
-    </button>
 
+      {/* Phrase choc Claude */}
+{phrase && (
+  <div style={{
+    textAlign: 'center',
+    padding: '20px 24px',
+    background: 'rgba(200,255,0,0.04)',
+    border: '1px solid rgba(200,255,0,0.12)',
+    borderRadius: '12px',
+  }}>
+    <p style={{
+      fontFamily: 'Syne',
+      fontSize: '16px',
+      fontWeight: 700,
+      color: '#C8FF00',
+      lineHeight: '1.5',
+      margin: 0,
+      fontStyle: 'italic',
+    }}>
+      "{phrase}"
+    </p>
+  </div>
+)}
 
       {/* Boutons */}
       <div style={{display:'flex', flexDirection:'column', gap:'12px'}}>
         <button
           onClick={handleShare}
+          disabled={sharing}
           style={{
             width:'100%', height:'56px', borderRadius:'12px',
-            background:'transparent', color:'var(--on-surface)',
+            background: sharing ? 'rgba(200,255,0,0.05)' : 'transparent',
+            color:'var(--on-surface)',
             fontFamily:'DM Sans', fontSize:'12px', fontWeight:700,
             letterSpacing:'0.1em', textTransform:'uppercase',
             display:'flex', alignItems:'center', justifyContent:'center', gap:'12px',
             border:'1px solid rgba(142,148,121,0.3)',
-            cursor:'pointer', transition:'background 0.2s'
+            cursor: sharing ? 'not-allowed' : 'pointer',
+            transition:'background 0.2s',
+            opacity: sharing ? 0.6 : 1,
           }}
-          onMouseEnter={e => (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
+          onMouseEnter={e => !sharing && (e.currentTarget.style.background = 'rgba(255,255,255,0.05)')}
           onMouseLeave={e => (e.currentTarget.style.background = 'transparent')}
         >
-          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
-            <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
-            <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
-            <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
-          </svg>
-          Partager mon résultat
+          {sharing ? (
+            <>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round" style={{animation:'spin 1s linear infinite'}}>
+                <path d="M21 12a9 9 0 1 1-6.219-8.56"/>
+              </svg>
+              Génération en cours…
+            </>
+          ) : (
+            <>
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" strokeLinejoin="round">
+                <circle cx="18" cy="5" r="3"/><circle cx="6" cy="12" r="3"/><circle cx="18" cy="19" r="3"/>
+                <line x1="8.59" y1="13.51" x2="15.42" y2="17.49"/>
+                <line x1="15.41" y1="6.51" x2="8.59" y2="10.49"/>
+              </svg>
+              Partager mon résultat
+            </>
+          )}
         </button>
 
         <button
@@ -235,14 +283,9 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
         Analyse algorithmique MiroirStats v4.2.
       </p>
 
-      {showShareModal && verdict && (
-  <ShareCardModal
-    ratio={verdict.ratio}
-    searchPct={parseFloat(searchResult.percentage.toFixed(2))}
-    selfPct={parseFloat(selfResult.percentage.toFixed(2))}
-    onClose={() => setShowShareModal(false)}
-  />
-)}
+      <style>{`
+        @keyframes spin { from { transform: rotate(0deg) } to { transform: rotate(360deg) } }
+      `}</style>
     </div>
   )
 }
