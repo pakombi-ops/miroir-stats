@@ -143,7 +143,7 @@ export default function ShareCardModal({ ratio, searchPct, selfPct, onClose }: S
   }, [format, drawOnCanvas])
 
   // ── Téléchargement HD côté client ────────────────────────────────────────────
-  ffunction downloadHD() {
+  function downloadHD() {
   const tmp = document.createElement('canvas')
   tmp.width  = 1080
   tmp.height = format === 'square' ? 1080 : 1920
