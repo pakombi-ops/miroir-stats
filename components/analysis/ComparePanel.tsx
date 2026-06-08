@@ -11,7 +11,7 @@ interface ComparePanelProps {
 export default function ComparePanel({ searchResult, selfResult, onAdjust }: ComparePanelProps) {
   const [sharing, setSharing] = useState(false)
   const [phrase, setPhrase] = useState('')
-  
+
   if (!searchResult || !selfResult) {
     return (
       <div style={{display:'flex', flexDirection:'column', alignItems:'center', justifyContent:'center', padding:'80px 0', textAlign:'center', gap:'16px'}}>
@@ -64,14 +64,19 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust }: Com
     } catch { /* silencieux — on partage sans phrase si erreur */ }
 
     const text = [
-      phrase,
-      '',
-      `Je cherche ${formatPercentage(searchResult.percentage)}% de la population mondiale.`,
-      `Je représente moi-même ${formatPercentage(selfResult.percentage)}%.`,
-      `Mon ratio d'exigence : ${ratioStr} 👀`,
-      '',
-      'mystandards.app',
-    ].filter(Boolean).join('\n')
+  phrase ? `"${phrase}"` : '',
+  '',
+  `📊 J'ai testé MiroirMiroir, l'app qui calcule ton ratio d'exigence en amour.`,
+  '',
+  `Ce que je cherche : ${formatPercentage(searchResult.percentage)}% de la population mondiale correspond à mes critères.`,
+  `Ce que je suis : je représente moi-même ${formatPercentage(selfResult.percentage)}% de la population.`,
+  `Mon ratio d'exigence : ${ratioStr} 👀`,
+  '',
+  `Autrement dit — je cherche quelqu'un ${ratioStr} plus rare que moi.`,
+  '',
+  `Teste toi-même et découvre ton ratio 👇`,
+  `mystandards.app`,
+].filter(Boolean).join('\n')
 
     setSharing(false)
 
