@@ -15,6 +15,8 @@ export interface Criteria {
   obesite: string
   enfants: string          // ← nouveau
   religion: string         // ← nouveau
+  cheveuxCouleur: string
+  yeuxCouleur: string
 }
 
 export interface AnalysisResult {
@@ -50,6 +52,8 @@ export function getDefaultCriteria(): Criteria {
     obesite: 'Peu importe',
     enfants: 'Peu importe',
     religion: 'Toutes',
+    cheveuxCouleur: 'Toutes',
+    yeuxCouleur: 'Toutes',
   }
 }
 
@@ -72,6 +76,8 @@ export function getActiveCriteria(criteria: Criteria): string[] {
   if (criteria.obesite !== def.obesite) active.push(`- Obésité : ${criteria.obesite}`)
   if (criteria.enfants !== def.enfants) active.push(`- Enfants : ${criteria.enfants}`)
   if (criteria.religion !== def.religion) active.push(`- Religion : ${criteria.religion}`)
+  if (criteria.cheveuxCouleur !== def.cheveuxCouleur) active.push(`- Cheveux : ${criteria.cheveuxCouleur}`)
+  if (criteria.yeuxCouleur !== def.yeuxCouleur) active.push(`- Yeux : ${criteria.yeuxCouleur}`)
   return active
 }
 

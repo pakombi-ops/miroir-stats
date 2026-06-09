@@ -80,6 +80,11 @@ function Card({ label, isActive, accent, children }: { label: string; isActive: 
   )
 }
 
+const CHEVEUX = ['Toutes', 'Noirs', 'Bruns', 'Châtains', 'Blonds', 'Roux', 'Blancs / Gris', 'Autre']
+const CHEVEUX_SELF = ['Noirs', 'Bruns', 'Châtains', 'Blonds', 'Roux', 'Blancs / Gris', 'Autre']
+
+const YEUX = ['Toutes', 'Noirs', 'Marron', 'Noisette', 'Verts', 'Bleus', 'Gris', 'Autre']
+const YEUX_SELF = ['Noirs', 'Marron', 'Noisette', 'Verts', 'Bleus', 'Gris', 'Autre']
 const RELIGIONS = ['Toutes', 'Athée / Agnostique', 'Chrétienne', 'Musulmane', 'Juive', 'Hindoue', 'Bouddhiste', 'Autre']
 const RELIGIONS_SELF = ['Athée / Agnostique', 'Chrétienne', 'Musulmane', 'Juive', 'Hindoue', 'Bouddhiste', 'Autre']
 
@@ -259,6 +264,26 @@ export default function CriteriaPanel({ criteria, onChange, accentColor, loading
           accent={accent}
         />
       </Card>
+
+      {/* Cheveux */}
+    <Card label="Couleur des cheveux" isActive={criteria.cheveuxCouleur !== def.cheveuxCouleur} accent={accent}>
+      <ToggleGroup
+       options={mode === 'self' ? CHEVEUX_SELF : CHEVEUX}
+       value={criteria.cheveuxCouleur}
+        onChange={v => set('cheveuxCouleur', v)}
+        accent={accent}
+      />
+    </Card>
+
+    {/* Yeux */}
+  <Card label="Couleur des yeux" isActive={criteria.yeuxCouleur !== def.yeuxCouleur} accent={accent}>
+    <ToggleGroup
+    options={mode === 'self' ? YEUX_SELF : YEUX}
+    value={criteria.yeuxCouleur}
+    onChange={v => set('yeuxCouleur', v)}
+    accent={accent}
+  />
+  </Card>
 
       {/* Obésité */}
       <Card label="En obésité" isActive={criteria.obesite !== def.obesite} accent={accent}>
