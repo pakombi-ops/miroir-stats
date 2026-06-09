@@ -6,7 +6,7 @@ interface Props {
   onChange: (id: keyof Criteria, value: any) => void
   accentColor: 'lime' | 'blue'
   loading?: boolean
-  mode?: 'search' | 'self'   // ← nouveau
+  mode?: 'search' | 'self'
 }
 
 function ToggleGroup({ options, value, onChange, accent }: { options: string[]; value: string; onChange: (v: string) => void; accent: string }) {
@@ -81,6 +81,7 @@ function Card({ label, isActive, accent, children }: { label: string; isActive: 
 }
 
 const RELIGIONS = ['Toutes', 'Athée / Agnostique', 'Chrétienne', 'Musulmane', 'Juive', 'Hindoue', 'Bouddhiste', 'Autre']
+const RELIGIONS_SELF = ['Athée / Agnostique', 'Chrétienne', 'Musulmane', 'Juive', 'Hindoue', 'Bouddhiste', 'Autre']
 
 export default function CriteriaPanel({ criteria, onChange, accentColor, loading, mode = 'search' }: Props) {
   const def = getDefaultCriteria()
@@ -109,14 +110,14 @@ export default function CriteriaPanel({ criteria, onChange, accentColor, loading
       {/* Genre */}
       <Card label="Genre" isActive={criteria.genre !== def.genre} accent={accent}>
         <ToggleGroup
-          options={['Tous', 'Femme', 'Homme', 'Non-binaire']}
+          options={mode === 'self' ? ['Femme', 'Homme', 'Non-binaire'] : ['Tous', 'Femme', 'Homme', 'Non-binaire']}
           value={criteria.genre}
           onChange={v => set('genre', v)}
           accent={accent}
         />
       </Card>
 
-      {/* Âge — fourchette en mode search, slider unique en mode self */}
+      {/* Âge */}
       {mode === 'search' ? (
         <Card label="Tranche d'âge" isActive={criteria.ageMin !== def.ageMin || criteria.ageMax !== def.ageMax} accent={accent}>
           <div style={{ fontSize: '20px', fontFamily: 'Syne, sans-serif', fontWeight: 700, color: 'var(--on-surface)', marginTop: '8px' }}>
@@ -175,7 +176,7 @@ export default function CriteriaPanel({ criteria, onChange, accentColor, loading
       {/* Zone */}
       <Card label="Zone géographique" isActive={criteria.zone !== def.zone} accent={accent}>
         <ToggleGroup
-          options={['Monde entier', 'France', 'Europe', 'Amérique du Nord', 'Asie', 'Afrique']}
+          options={mode === 'self' ? ['France', 'Europe', 'Amérique du Nord', 'Asie', 'Afrique'] : ['Monde entier', 'France', 'Europe', 'Amérique du Nord', 'Asie', 'Afrique']}
           value={criteria.zone}
           onChange={v => set('zone', v)}
           accent={accent}
@@ -185,17 +186,17 @@ export default function CriteriaPanel({ criteria, onChange, accentColor, loading
       {/* Ethnie */}
       <Card label="Origine ethnique" isActive={criteria.ethnie !== def.ethnie} accent={accent}>
         <ToggleGroup
-          options={['Toutes', 'Blanche', 'Noire', 'Asiatique', 'Latino', 'Arabe', 'Métissée']}
+          options={mode === 'self' ? ['Blanche', 'Noire', 'Asiatique', 'Latino', 'Arabe', 'Métissée'] : ['Toutes', 'Blanche', 'Noire', 'Asiatique', 'Latino', 'Arabe', 'Métissée']}
           value={criteria.ethnie}
           onChange={v => set('ethnie', v)}
           accent={accent}
         />
       </Card>
 
-      {/* Religion — dans les deux modes */}
+      {/* Religion */}
       <Card label="Religion" isActive={criteria.religion !== def.religion} accent={accent}>
         <ToggleGroup
-          options={RELIGIONS}
+          options={mode === 'self' ? RELIGIONS_SELF : RELIGIONS}
           value={criteria.religion}
           onChange={v => set('religion', v)}
           accent={accent}
@@ -249,7 +250,7 @@ export default function CriteriaPanel({ criteria, onChange, accentColor, loading
         </Card>
       )}
 
-      {/* Enfants — dans les deux modes */}
+      {/* Enfants */}
       <Card label="Enfant(s)" isActive={criteria.enfants !== def.enfants} accent={accent}>
         <ToggleGroup
           options={mode === 'search' ? ['Peu importe', 'Sans enfants', 'Avec enfants'] : ['Non', 'Oui']}
@@ -262,7 +263,7 @@ export default function CriteriaPanel({ criteria, onChange, accentColor, loading
       {/* Obésité */}
       <Card label="En obésité" isActive={criteria.obesite !== def.obesite} accent={accent}>
         <ToggleGroup
-          options={['Peu importe', 'Non', 'Oui']}
+          options={mode === 'self' ? ['Non', 'Oui'] : ['Peu importe', 'Non', 'Oui']}
           value={criteria.obesite}
           onChange={v => set('obesite', v)}
           accent={accent}
