@@ -55,6 +55,7 @@ export async function POST(request: NextRequest) {
   }
 
   if (action === 'verify') {
+    // Vérifie le code OTP
     const { data: otpData, error: otpError } = await supabase
       .from('otp_codes')
       .select('*')
@@ -67,18 +68,10 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Code invalide ou expiré' }, { status: 400 })
     }
 
+    // Récupère ou crée l'utilisateur
     const { data: { users } } = await supabase.auth.admin.listUsers()
-const existingUser = users.find(u => u.email === email)
-let userId = existingUser?.id
-
-// Vérifie si le profil existe (indicateur plus fiable de "nouvel utilisateur")
-const { data: existingProfile } = await supabase
-  .from('profiles')
-  .select('id, onboarding_done')
-  .eq('id', userId ?? '')
-  .single()
-
-const isNewUser = !existingProfile
+    const existingUser = users.find(u => u.email === email)
+    let userId = existingUser?.id
 
     if (!userId) {
       const { data: newUser } = await supabase.auth.admin.createUser({
@@ -90,18 +83,31 @@ const isNewUser = !existingProfile
       await supabase.auth.admin.updateUserById(userId, { email_confirm: true })
     }
 
+    // Vérifie si l'email de bienvenue a déjà été envoyé
+    const { data: profileData } = await supabase
+      .from('profiles')
+      .select('id, welcome_email_sent')
+      .eq('id', userId ?? '')
+      .single()
+
+    const shouldSendWelcome = !profileData?.welcome_email_sent
+
+    console.log('USER ID:', userId, 'SHOULD SEND WELCOME:', shouldSendWelcome, 'PROFILE:', profileData)
+
+    // Génère le lien de session
     const { data: linkData } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email,
     })
 
+    // Supprime le code OTP utilisé
     await supabase.from('otp_codes').delete().eq('email', email)
 
-    console.log('PROFILE CHECK:', existingProfile, 'IS NEW USER:', isNewUser, 'USER ID:', userId)
-
-    // Email de bienvenue pour les nouveaux utilisateurs
-    if (isNewUser) {
-      await fetch('https://api.resend.com/emails', {
+    // Envoie l'email de bienvenue si pas encore envoyé
+    if (shouldSendWelcome) {
+      console.log('SENDING WELCOME EMAIL TO:', email)
+      
+      const emailRes = await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
@@ -115,13 +121,10 @@ const isNewUser = !existingProfile
             <div style="background:#0A0A0F;padding:40px;font-family:sans-serif;color:#e5e2dd;max-width:480px;margin:0 auto;border-radius:16px">
               <h1 style="color:#C8FF00;font-size:28px;margin-bottom:4px;font-weight:900">MIROIR</h1>
               <p style="color:#8e9479;font-style:italic;margin-bottom:32px;margin-top:0">Tes standards face à la réalité.</p>
-              
               <h2 style="font-size:22px;font-weight:700;margin-bottom:16px;color:#e5e2dd">Bienvenue 👋</h2>
-              
               <p style="font-size:16px;color:#8e9479;line-height:1.7;margin-bottom:24px">
                 Ton compte est créé. Tu as <strong style="color:#C8FF00">3 crédits gratuits</strong> pour découvrir ton ratio d'exigence.
               </p>
-
               <div style="background:rgba(200,255,0,0.08);border:1px solid rgba(200,255,0,0.2);border-radius:12px;padding:20px;margin-bottom:32px">
                 <p style="margin:0;font-size:14px;color:#C8FF00;font-weight:700">Comment ça marche :</p>
                 <p style="margin:8px 0 0;font-size:14px;color:#8e9479;line-height:1.6">
@@ -130,11 +133,9 @@ const isNewUser = !existingProfile
                   3. Découvre ton ratio d'exigence
                 </p>
               </div>
-
               <a href="https://www.mystandards.app/app-main" style="display:block;background:#C8FF00;color:#161f00;padding:16px;border-radius:12px;font-weight:700;font-size:16px;text-decoration:none;text-align:center">
                 Lancer mon analyse →
               </a>
-
               <p style="color:#8e9479;font-size:12px;margin-top:32px;text-align:center;opacity:0.5">
                 MiroirStats · mystandards.app<br/>
                 <a href="https://www.mystandards.app/privacy" style="color:#8e9479">Politique de confidentialité</a>
@@ -143,6 +144,14 @@ const isNewUser = !existingProfile
           `
         })
       })
+
+      console.log('RESEND RESPONSE:', emailRes.status)
+
+      // Marque l'email comme envoyé
+      await supabase
+        .from('profiles')
+        .update({ welcome_email_sent: true })
+        .eq('id', userId ?? '')
     }
 
     const generatedLink = linkData?.properties?.action_link ?? ''
