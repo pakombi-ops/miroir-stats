@@ -70,7 +70,11 @@ export default function AppMain() {
     const setLoading = type === 'search' ? setLoadingSearch : setLoadingSelf
     const setResult = type === 'search' ? setSearchResult : setSelfResult
 
-    if (credits !== null && credits <= 0 && userId) { router.push('/pricing'); return }
+    if (credits !== null && credits <= 0 && userId) {
+      setError('Tes crédits sont épuisés. Achète un pack pour continuer tes analyses.')
+      setTimeout(() => router.push('/pricing'), 2500)
+      return
+    }
 
     setLoading(true); setError(null)
     try {
@@ -137,10 +141,23 @@ export default function AppMain() {
       <div className="overflow-y-auto relative z-10" style={{ paddingTop: '112px', paddingBottom: '96px' }}>
 
         {error && (
-          <div className="mx-5 mt-4 p-3 rounded-xl text-center" style={{ fontSize: '13px', background: 'rgba(255,92,77,0.1)', color: 'var(--error)', border: '1px solid rgba(255,92,77,0.2)' }}>
-            {error}
-          </div>
-        )}
+  <div className="mx-5 mt-4 p-4 rounded-xl text-center" style={{
+    background: error.includes('épuisés') ? 'rgba(200,255,0,0.08)' : 'rgba(255,92,77,0.1)',
+    color: error.includes('épuisés') ? '#C8FF00' : 'var(--error)',
+    border: `1px solid ${error.includes('épuisés') ? 'rgba(200,255,0,0.3)' : 'rgba(255,92,77,0.2)'}`,
+    fontSize: '14px', fontFamily: 'DM Sans'
+  }}>
+    {error.includes('épuisés') && (
+      <div style={{ fontSize: '24px', marginBottom: '8px' }}>✦</div>
+    )}
+    {error}
+    {error.includes('épuisés') && (
+      <div style={{ fontSize: '12px', opacity: 0.7, marginTop: '6px' }}>
+        Redirection dans 3 secondes…
+      </div>
+    )}
+  </div>
+)}
 
         {/* TAB: Je cherche */}
         {tab === 'search' && (
