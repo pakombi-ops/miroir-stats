@@ -27,14 +27,25 @@ export default function AppMain() {
   const [viralPhrase, setViralPhrase] = useState('')
 
   useEffect(() => {
-    const supabase = createBrowserClient(
-      process.env.NEXT_PUBLIC_SUPABASE_URL!,
-      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-    )
-    supabase.auth.getSession().then(({ data }) => {
-      if (!data.session) router.replace('/login')
-    })
-  }, [])
+  const supabase = createBrowserClient(
+    process.env.NEXT_PUBLIC_SUPABASE_URL!,
+    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+  )
+
+  // Vérifie la session au montage
+  supabase.auth.getSession().then(({ data }) => {
+    if (!data.session) router.replace('/login')
+  })
+
+  // Surveille les changements de session en continu
+  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+    if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+      router.replace('/login')
+    }
+  })
+
+  return () => subscription.unsubscribe()
+}, [])
 
   const handleCreditsLoaded = useCallback((balance: number, uid: string | null) => {
     setCredits(balance); setUserId(uid)
