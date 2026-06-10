@@ -94,7 +94,12 @@ export default function AppMain() {
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({ criteria, profileType: type, userId }),
       })
-      if (res.status === 402) { router.push('/pricing'); return }
+      if (res.status === 402) {
+      setError('Tes crédits sont épuisés. Achète un pack pour continuer tes analyses.')
+      setTimeout(() => router.push('/pricing'), 2500)
+      return
+      }
+      
       if (!res.ok) throw new Error('Erreur serveur')
       const data = await res.json()
       setResult(data)
