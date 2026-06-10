@@ -97,6 +97,8 @@ const isNewUser = !existingProfile
 
     await supabase.from('otp_codes').delete().eq('email', email)
 
+    console.log('PROFILE CHECK:', existingProfile, 'IS NEW USER:', isNewUser, 'USER ID:', userId)
+
     // Email de bienvenue pour les nouveaux utilisateurs
     if (isNewUser) {
       await fetch('https://api.resend.com/emails', {
