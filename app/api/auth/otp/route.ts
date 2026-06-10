@@ -68,9 +68,17 @@ export async function POST(request: NextRequest) {
     }
 
     const { data: { users } } = await supabase.auth.admin.listUsers()
-    const existingUser = users.find(u => u.email === email)
-    const isNewUser = !existingUser
-    let userId = existingUser?.id
+const existingUser = users.find(u => u.email === email)
+let userId = existingUser?.id
+
+// Vérifie si le profil existe (indicateur plus fiable de "nouvel utilisateur")
+const { data: existingProfile } = await supabase
+  .from('profiles')
+  .select('id, onboarding_done')
+  .eq('id', userId ?? '')
+  .single()
+
+const isNewUser = !existingProfile
 
     if (!userId) {
       const { data: newUser } = await supabase.auth.admin.createUser({
