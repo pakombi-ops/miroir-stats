@@ -224,68 +224,21 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust, viral
       )}
 
       {/* CTA Affiliation Dating */}
-      <div style={{
-        padding: '20px',
-        borderRadius: '16px',
-        background: 'rgba(255,255,255,0.03)',
-        border: '1px solid rgba(255,255,255,0.06)',
-        marginBottom: '8px'
-      }}>
-        <p style={{
-          fontFamily: 'DM Sans', fontSize: '12px', fontWeight: 500,
-          letterSpacing: '0.1em', textTransform: 'uppercase',
-          color: '#8e9479', marginBottom: '8px', textAlign: 'center'
-        }}>
-          {verdict.ratio > 5
-            ? 'Malgré ton ratio, prêt(e) à tenter ta chance ?'
-            : "Prêt(e) à rencontrer quelqu'un qui te correspond ?"
-          }
+      <div style={{padding:'20px',borderRadius:'16px',background:'rgba(255,255,255,0.03)',border:'1px solid rgba(255,255,255,0.06)',marginBottom:'8px'}}>
+        <p style={{fontFamily:'DM Sans',fontSize:'12px',fontWeight:500,letterSpacing:'0.1em',textTransform:'uppercase',color:'#8e9479',marginBottom:'8px',textAlign:'center'}}>
+          {verdict.ratio > 5 ? 'Malgré ton ratio, prêt(e) à tenter ta chance ?' : "Prêt(e) à rencontrer quelqu'un qui te correspond ?"}
         </p>
-
-        <div style={{ display: 'flex', gap: '12px' }}>
-          
-            href="https://tinder.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              flex: 1, height: '48px', borderRadius: '10px',
-              background: 'linear-gradient(135deg, #FE3C72, #FF6B6B)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              textDecoration: 'none'
-            }}
-          
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M8.5 3C8.5 3 9 7.5 6 10.5C3 13.5 2 17 2 17C2 17 3.5 14 7 13C7 13 5 16 5 19C5 21.5 7 23 9.5 23C13 23 16 20 16 16.5C16 14 14.5 12 14.5 12C14.5 12 15 14 13.5 15.5C13.5 15.5 14 13 13 11.5C12 10 12 8 12 8C12 8 11.5 10 10 11C10 11 11 7 8.5 3Z"/>
-            </svg>
-            <span style={{ fontFamily: 'DM Sans', fontSize: '14px', fontWeight: 700, color: 'white' }}>
-              Tinder
-            </span>
+        <div style={{display:'flex',gap:'12px'}}>
+          <a href="https://tinder.com" target="_blank" rel="noopener noreferrer" style={{flex:1,height:'48px',borderRadius:'10px',background:'linear-gradient(135deg, #FE3C72, #FF6B6B)',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',textDecoration:'none'}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M8.5 3C8.5 3 9 7.5 6 10.5C3 13.5 2 17 2 17C2 17 3.5 14 7 13C7 13 5 16 5 19C5 21.5 7 23 9.5 23C13 23 16 20 16 16.5C16 14 14.5 12 14.5 12C14.5 12 15 14 13.5 15.5C13.5 15.5 14 13 13 11.5C12 10 12 8 12 8C12 8 11.5 10 10 11C10 11 11 7 8.5 3Z"/></svg>
+            <span style={{fontFamily:'DM Sans',fontSize:'14px',fontWeight:700,color:'white'}}>Tinder</span>
           </a>
-
-          
-            href="https://bumble.com"
-            target="_blank"
-            rel="noopener noreferrer"
-            style={{
-              flex: 1, height: '48px', borderRadius: '10px',
-              background: 'linear-gradient(135deg, #FDA800, #FFCC00)',
-              display: 'flex', alignItems: 'center', justifyContent: 'center', gap: '8px',
-              textDecoration: 'none'
-            }}
-          
-            <svg width="18" height="18" viewBox="0 0 24 24" fill="white">
-              <path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/>
-            </svg>
-            <span style={{ fontFamily: 'DM Sans', fontSize: '14px', fontWeight: 700, color: '#7A5A00' }}>
-              Bumble
-            </span>
+          <a href="https://bumble.com" target="_blank" rel="noopener noreferrer" style={{flex:1,height:'48px',borderRadius:'10px',background:'linear-gradient(135deg, #FDA800, #FFCC00)',display:'flex',alignItems:'center',justifyContent:'center',gap:'8px',textDecoration:'none'}}>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="white"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2zm-1 14H9V8h2v8zm4 0h-2V8h2v8z"/></svg>
+            <span style={{fontFamily:'DM Sans',fontSize:'14px',fontWeight:700,color:'#7A5A00'}}>Bumble</span>
           </a>
         </div>
-
-        <p style={{
-          fontFamily: 'DM Sans', fontSize: '10px', color: '#8e9479',
-          textAlign: 'center', marginTop: '8px', opacity: 0.5
-        }}>
+        <p style={{fontFamily:'DM Sans',fontSize:'10px',color:'#8e9479',textAlign:'center',marginTop:'8px',opacity:0.5}}>
           Liens partenaires — MiroirStats touche une commission si tu t'inscris
         </p>
       </div>
