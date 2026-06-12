@@ -1,8 +1,8 @@
 'use client'
-import { useEffect, useState } from 'react'
+import { Suspense, useEffect, useState } from 'react'
 import { useSearchParams, useRouter } from 'next/navigation'
 
-export default function GiftSendPage() {
+function GiftSendContent() {
   const [giftLink, setGiftLink] = useState<string | null>(null)
   const [copied, setCopied] = useState(false)
   const [loading, setLoading] = useState(true)
@@ -107,5 +107,17 @@ export default function GiftSendPage() {
 
       <style>{`@keyframes pulseDot { 0%,100%{opacity:0.3} 50%{opacity:1} }`}</style>
     </div>
+  )
+}
+
+export default function GiftSendPage() {
+  return (
+    <Suspense fallback={
+      <div style={{minHeight:'100vh', display:'flex', alignItems:'center', justifyContent:'center', backgroundColor:'#0A0A0F'}}>
+        <div style={{width:'8px', height:'8px', borderRadius:'50%', background:'#C8FF00'}}/>
+      </div>
+    }>
+      <GiftSendContent />
+    </Suspense>
   )
 }
