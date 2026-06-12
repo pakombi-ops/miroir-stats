@@ -57,13 +57,17 @@ export default function LoginPage() {
   if (!otp || otp.length !== 6) return
   setLoading(true); setError('')
 
+  const giftToken = sessionStorage.getItem('gift_token')
+
   const res = await fetch('/api/auth/otp', {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
-    body: JSON.stringify({ email, action: 'verify', token: otp })
+    body: JSON.stringify({ email, action: 'verify', token: otp, giftToken })
   })
   const data = await res.json()
 
+  if (giftToken) sessionStorage.removeItem('gift_token')
+    
   if (!res.ok) {
     setError(data.error || 'Code incorrect')
     setLoading(false)

@@ -3,7 +3,7 @@ import { createAdminClient } from '@/lib/supabase/server'
 
 export async function POST(request: NextRequest) {
   const body = await request.json()
-  const { email, action, token } = body
+  const { email, action, token, giftToken } = body
 
   const supabase = await createAdminClient()
 
@@ -92,8 +92,6 @@ export async function POST(request: NextRequest) {
 
     const shouldSendWelcome = !profileData?.welcome_email_sent
 
-    console.log('USER ID:', userId, 'SHOULD SEND WELCOME:', shouldSendWelcome, 'PROFILE:', profileData)
-
     // Génère le lien de session
     const { data: linkData } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
@@ -103,11 +101,28 @@ export async function POST(request: NextRequest) {
     // Supprime le code OTP utilisé
     await supabase.from('otp_codes').delete().eq('email', email)
 
+    // Applique le cadeau (uniquement pour les nouveaux utilisateurs)
+    if (shouldSendWelcome && giftToken) {
+      const { data: gift } = await supabase
+        .from('gift_tokens')
+        .select('*')
+        .eq('token', giftToken)
+        .eq('redeemed', false)
+        .single()
+
+      if (gift && userId) {
+        await supabase.rpc('increment_balance', { user_id: userId, amount: gift.credits_amount })
+
+        await supabase
+          .from('gift_tokens')
+          .update({ redeemed: true, redeemed_by: userId, redeemed_at: new Date().toISOString() })
+          .eq('token', giftToken)
+      }
+    }
+
     // Envoie l'email de bienvenue si pas encore envoyé
     if (shouldSendWelcome) {
-      console.log('SENDING WELCOME EMAIL TO:', email)
-      
-      const emailRes = await fetch('https://api.resend.com/emails', {
+      await fetch('https://api.resend.com/emails', {
         method: 'POST',
         headers: {
           'Authorization': `Bearer ${process.env.RESEND_API_KEY}`,
@@ -116,14 +131,14 @@ export async function POST(request: NextRequest) {
         body: JSON.stringify({
           from: 'noreply@mystandards.app',
           to: email,
-          subject: '🎁 Tes 3 crédits t\'attendent — MiroirStats',
+          subject: '🎁 Tes crédits t\'attendent — MiroirStats',
           html: `
             <div style="background:#0A0A0F;padding:40px;font-family:sans-serif;color:#e5e2dd;max-width:480px;margin:0 auto;border-radius:16px">
               <h1 style="color:#C8FF00;font-size:28px;margin-bottom:4px;font-weight:900">MIROIR</h1>
               <p style="color:#8e9479;font-style:italic;margin-bottom:32px;margin-top:0">Tes standards face à la réalité.</p>
               <h2 style="font-size:22px;font-weight:700;margin-bottom:16px;color:#e5e2dd">Bienvenue 👋</h2>
               <p style="font-size:16px;color:#8e9479;line-height:1.7;margin-bottom:24px">
-                Ton compte est créé. Tu as <strong style="color:#C8FF00">3 crédits gratuits</strong> pour découvrir ton ratio d'exigence.
+                Ton compte est créé. Tu as <strong style="color:#C8FF00">${giftToken ? '6 crédits' : '3 crédits'} gratuits</strong> pour découvrir ton ratio d'exigence.
               </p>
               <div style="background:rgba(200,255,0,0.08);border:1px solid rgba(200,255,0,0.2);border-radius:12px;padding:20px;margin-bottom:32px">
                 <p style="margin:0;font-size:14px;color:#C8FF00;font-weight:700">Comment ça marche :</p>
@@ -145,9 +160,6 @@ export async function POST(request: NextRequest) {
         })
       })
 
-      console.log('RESEND RESPONSE:', emailRes.status)
-
-      // Marque l'email comme envoyé
       await supabase
         .from('profiles')
         .update({ welcome_email_sent: true })

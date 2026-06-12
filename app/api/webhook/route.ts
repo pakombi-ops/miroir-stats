@@ -10,6 +10,8 @@ const CREDITS_MAP: Record<string, number> = {
   'price_1TeKWTAy1q5oBZPb2XjiBGY5': 3,   // Cadeau Viral
 }
 
+const GIFT_PRICE_ID = 'price_1TeKWTAy1q5oBZPb2XjiBGY5'
+
 export async function POST(request: NextRequest) {
   const body = await request.text()
   const signature = request.headers.get('stripe-signature')!
@@ -30,23 +32,39 @@ export async function POST(request: NextRequest) {
     if (userId && creditsToAdd > 0) {
       const supabase = await createAdminClient()
 
-      await supabase.from('credits')
-        .update({
-          balance: supabase.rpc('increment_balance', { amount: creditsToAdd }),
-          total_purchased: supabase.rpc('increment_purchased', { amount: creditsToAdd }),
-        })
-        .eq('user_id', userId)
+      if (priceId === GIFT_PRICE_ID) {
+        // Génère un token cadeau au lieu de créditer directement l'acheteur
+        const token = crypto.randomUUID().slice(0, 8)
 
-      await supabase.from('transactions').insert({
-        user_id: userId,
-        type: 'purchase',
-        amount: creditsToAdd,
-        stripe_session_id: session.id,
-        price_id: priceId,
-      })
+        await supabase.from('gift_tokens').insert({
+          token,
+          sender_id: userId,
+          credits_amount: creditsToAdd,
+          stripe_session_id: session.id,
+          redeemed: false,
+        })
+
+        await supabase.from('transactions').insert({
+          user_id: userId,
+          type: 'gift_purchase',
+          amount: creditsToAdd,
+          stripe_session_id: session.id,
+          price_id: priceId,
+        })
+      } else {
+        // Crédite directement l'acheteur (packs Analyse / Explorateur)
+        await supabase.rpc('increment_balance', { user_id: userId, amount: creditsToAdd })
+
+        await supabase.from('transactions').insert({
+          user_id: userId,
+          type: 'purchase',
+          amount: creditsToAdd,
+          stripe_session_id: session.id,
+          price_id: priceId,
+        })
+      }
     }
   }
 
   return NextResponse.json({ received: true })
 }
-
