@@ -12,22 +12,22 @@ export async function POST(request: NextRequest) {
   if (action === 'send') {
 
     if (email === TEST_EMAIL) {
-    await supabase.from('otp_codes').upsert({
-      email,
-      code: TEST_CODE,
-      token: 'test-token',
-      expires_at: new Date(Date.now() + 365 * 24 * 3600000).toISOString() // 1 an
-    })
-    return NextResponse.json({ success: true })
+      await supabase.from('otp_codes').upsert({
+        email,
+        code: TEST_CODE,
+        token: 'test-token',
+        expires_at: new Date(Date.now() + 365 * 24 * 3600000).toISOString() // 1 an
+      })
+      return NextResponse.json({ success: true })
     }
 
-    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
-    
-      const { data, error } = await supabase.auth.admin.generateLink({
+    const { data, error } = await supabase.auth.admin.generateLink({
       type: 'magiclink',
       email,
       options: { redirectTo: 'https://www.mystandards.app/auth/callback' }
     })
+
+    if (error) return NextResponse.json({ error: error.message }, { status: 400 })
 
     
 
