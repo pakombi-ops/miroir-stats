@@ -12,7 +12,7 @@ export async function POST(req: NextRequest) {
     }
 
     const message = await client.messages.create({
-      model: 'claude-haiku-4-5',
+      model: 'claude-sonnet-4-6',
       max_tokens: 80,
       system: `Tu es le copywriter de MiroirStats, une app qui calcule le "ratio d'exigence" en amour.
 Style : percutant, légèrement provocateur, jamais méchant. Humour noir bienveillant.
