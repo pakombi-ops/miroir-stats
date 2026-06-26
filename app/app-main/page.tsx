@@ -273,6 +273,7 @@ export default function AppMain() {
               searchResult={searchResult}
               selfResult={selfResult}
               viralPhrase={viralPhrase}
+              userId={userId ?? undefined}
               onAdjust={() => { setTab('search'); setView(p => ({ ...p, search: 'criteria' })) }}
             />
           </div>
