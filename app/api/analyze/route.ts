@@ -31,20 +31,16 @@ export async function POST(request: NextRequest) {
     }
 
     const supabase = await createAdminClient()
-    console.log('LOG 1 — supabase client créé')
 
     // --- CACHE CHECK (avant déduction crédit) ---
     const cacheKey = buildCacheKey(criteria, profileType)
-    console.log('LOG 2 — cacheKey:', cacheKey)
 
-    const { data: cached, error: cacheReadError } = await supabase
+    const { data: cached } = await supabase
       .from('analysis_cache')
       .select('result_json, hit_count')
       .eq('cache_key', cacheKey)
       .gt('expires_at', new Date().toISOString())
       .maybeSingle()
-
-    console.log('LOG 3 — cache read:', { cached: !!cached, cacheReadError })
 
     if (cached) {
       await supabase
@@ -52,7 +48,6 @@ export async function POST(request: NextRequest) {
         .update({ hit_count: (cached.hit_count ?? 0) + 1 })
         .eq('cache_key', cacheKey)
 
-      console.log('LOG 4 — cache HIT, retour sans appel API')
       return NextResponse.json({ ...cached.result_json, fromCache: true })
     }
     // --- FIN CACHE CHECK ---
@@ -103,8 +98,6 @@ ${zone ? `Base de calcul : population de "${zone}" uniquement. Le percentage et 
 
 Réponds uniquement en JSON strict.`
 
-    console.log('LOG 5 — appel Anthropic en cours')
-
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
       max_tokens: 500,
@@ -114,19 +107,16 @@ Réponds uniquement en JSON strict.`
 
     const raw = response.content.find(b => b.type === 'text')?.text ?? '{}'
     const clean = raw.replace(/```json|```/g, '').trim()
-    console.log('LOG 6 — raw Anthropic response:', raw)
 
     let result
     try {
       result = JSON.parse(clean)
-      console.log('LOG 7 — parse OK:', result)
-    } catch (parseError) {
-      console.error('LOG 7 — parse FAILED:', parseError, 'raw was:', raw)
+    } catch {
       return NextResponse.json({ error: 'Parse error' }, { status: 500 })
     }
 
     // --- STOCKAGE EN CACHE ---
-    const { error: cacheWriteError } = await supabase
+    await supabase
       .from('analysis_cache')
       .upsert({
         cache_key: cacheKey,
@@ -135,8 +125,6 @@ Réponds uniquement en JSON strict.`
         hit_count: 1,
         expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       }, { onConflict: 'cache_key' })
-
-    console.log('LOG 8 — cache upsert:', cacheWriteError ? `ERREUR: ${JSON.stringify(cacheWriteError)}` : 'OK')
     // --- FIN STOCKAGE ---
 
     if (userId) {
@@ -150,7 +138,7 @@ Réponds uniquement en JSON strict.`
 
     return NextResponse.json(result)
   } catch (error) {
-    console.error('LOG CATCH — Analyze error:', JSON.stringify(error))
+    console.error('Analyze error:', error)
     return NextResponse.json({ error: 'Erreur lors de l\'analyse' }, { status: 500 })
   }
 }
