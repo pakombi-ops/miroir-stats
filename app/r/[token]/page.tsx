@@ -1,4 +1,4 @@
-import { createAdminClient } from '@/lib/supabase-admin'
+import { createAdminClient } from '@/lib/supabase/server'
 import { redirect } from 'next/navigation'
 
 export default async function ShareRevealPage({ params }: { params: { token: string } }) {
