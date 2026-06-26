@@ -1,15 +1,17 @@
 'use client'
 import { AnalysisResult, getComparisonVerdict, formatPercentage } from '@/lib/types'
 import { useState, useEffect } from 'react'
+import { generateShareCanvas } from '@/components/ShareImageGenerator'
 
 interface ComparePanelProps {
   searchResult: AnalysisResult | null
   selfResult: AnalysisResult | null
   onAdjust?: () => void
   viralPhrase?: string
+  userId?: string
 }
 
-export default function ComparePanel({ searchResult, selfResult, onAdjust, viralPhrase = '' }: ComparePanelProps) {
+export default function ComparePanel({ searchResult, selfResult, onAdjust, viralPhrase = '', userId }: ComparePanelProps) {
   const [sharing, setSharing] = useState(false)
   const [phrase, setPhrase] = useState(viralPhrase)
 
@@ -51,7 +53,9 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust, viral
   const handleShare = async () => {
     setSharing(true)
 
-    const text = [
+    const isCapacitor = !!(window as any).Capacitor
+
+    const shareText = [
       `📊 J'ai testé MiroirMiroir, l'app qui calcule ton ratio d'exigence en amour.`,
       '',
       phrase ? `J'hallucine, regarde ce qu'elle dit de moi : "${phrase}"` : '',
@@ -66,18 +70,87 @@ export default function ComparePanel({ searchResult, selfResult, onAdjust, viral
       `mystandards.app`,
     ].filter(Boolean).join('\n')
 
+    // Générer le lien token viral si userId disponible
+    let shareUrl = 'https://mystandards.app'
+    if (userId) {
+      try {
+        const res = await fetch('/api/share/create', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            userId,
+            ratio: verdict.ratio,
+            searchPct: searchResult.percentage,
+            selfPct: selfResult.percentage,
+            viralPhrase: phrase,
+          }),
+        })
+        if (res.ok) {
+          const data = await res.json()
+          shareUrl = data.url
+        }
+      } catch {
+        // Silencieux — fallback sur l'URL principale
+      }
+    }
+
+    const shareTextWithUrl = shareText.replace('mystandards.app', shareUrl)
+
     setSharing(false)
 
-    if (navigator.share) {
-      navigator.share({
-        title: `Mon ratio d'exigence — MiroirStats`,
-        text,
-        url: 'https://mystandards.app',
-      }).catch(() => {})
-    } else {
-      navigator.clipboard.writeText(text)
-        .then(() => alert('Copié dans le presse-papier !'))
-        .catch(() => alert('Impossible de copier. Réessaie.'))
+    if (isCapacitor) {
+      // Android : partage texte uniquement (pas d'API fichiers native)
+      try {
+        const { Share } = await import('@capacitor/share')
+        await Share.share({ text: shareTextWithUrl, dialogTitle: "Partager mon ratio d'exigence" })
+      } catch {
+        navigator.clipboard.writeText(shareTextWithUrl)
+          .then(() => alert('Copié dans le presse-papiers !'))
+          .catch(() => alert('Impossible de copier. Réessaie.'))
+      }
+      return
+    }
+
+    // Web : essaie de partager avec l'image générée côté client
+    try {
+      const blob = await generateShareCanvas(
+        searchResult.percentage,
+        selfResult.percentage,
+        verdict.ratio,
+        phrase
+      )
+      const file = new File([blob], 'miroir-ratio.png', { type: 'image/png' })
+
+      if (navigator.canShare?.({ files: [file] })) {
+        await navigator.share({
+          files: [file],
+          text: shareTextWithUrl,
+          title: "Mon ratio d'exigence — MiroirStats",
+        })
+      } else {
+        // Fallback : télécharger l'image + copier le texte
+        const url = URL.createObjectURL(blob)
+        const a = document.createElement('a')
+        a.href = url
+        a.download = 'miroir-ratio.png'
+        a.click()
+        URL.revokeObjectURL(url)
+        await navigator.clipboard.writeText(shareTextWithUrl)
+        alert('Image téléchargée + texte copié dans le presse-papiers !')
+      }
+    } catch {
+      // Fallback ultime : texte seul
+      if (navigator.share) {
+        await navigator.share({
+          title: "Mon ratio d'exigence — MiroirStats",
+          text: shareTextWithUrl,
+          url: shareUrl,
+        }).catch(() => {})
+      } else {
+        navigator.clipboard.writeText(shareTextWithUrl)
+          .then(() => alert('Copié dans le presse-papier !'))
+          .catch(() => alert('Impossible de copier. Réessaie.'))
+      }
     }
   }
 
