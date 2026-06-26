@@ -2,6 +2,7 @@ import { NextRequest, NextResponse } from 'next/server'
 import Anthropic from '@anthropic-ai/sdk'
 import { createAdminClient } from '@/lib/supabase/server'
 import { getActiveCriteria } from '@/lib/types'
+import { createHash } from 'crypto'
 
 const anthropic = new Anthropic({
   apiKey: process.env.ANTHROPIC_API_KEY!,
@@ -10,6 +11,15 @@ const anthropic = new Anthropic({
 const SYSTEM_PROMPT = `Tu es un expert en démographie mondiale. Réponds UNIQUEMENT avec un objet JSON valide (sans markdown, sans backticks, sans texte avant ou après) ayant exactement cette structure :
 {"percentage":<nombre décimal entre 0.000001 et 100>,"count":"<estimation ex: ~2,3 millions>","reasoning":"<2-3 phrases factuelles basées sur des données démographiques réelles>","confidence":"<faible|moyen|élevé>"}
 IMPORTANT : Si une zone géographique est spécifiée, le percentage ET le count doivent être calculés PAR RAPPORT À LA POPULATION DE CETTE ZONE UNIQUEMENT, pas par rapport à la population mondiale. Par exemple, si la zone est "France" (68 millions), le percentage est sur 68 millions. Utilise des probabilités conditionnelles réalistes. Si aucun critère actif, retourne percentage: 100.`
+
+function buildCacheKey(criteria: Record<string, unknown>, profileType: string): string {
+  const sorted = Object.keys(criteria).sort().reduce((acc, key) => {
+    acc[key] = criteria[key]
+    return acc
+  }, {} as Record<string, unknown>)
+  const payload = JSON.stringify({ profileType, criteria: sorted })
+  return createHash('sha256').update(payload).digest('hex')
+}
 
 export async function POST(request: NextRequest) {
   try {
@@ -20,8 +30,30 @@ export async function POST(request: NextRequest) {
       return NextResponse.json({ error: 'Paramètres manquants' }, { status: 400 })
     }
 
+    const supabase = await createAdminClient()
+
+    // --- CACHE CHECK (avant déduction crédit) ---
+    const cacheKey = buildCacheKey(criteria, profileType)
+    const { data: cached } = await supabase
+      .from('analysis_cache')
+      .select('result_json')
+      .eq('cache_key', cacheKey)
+      .gt('expires_at', new Date().toISOString())
+      .maybeSingle()
+
+    if (cached) {
+      // Hit : on ne déduit pas de crédit, on incrémente juste le compteur
+      await supabase
+        .from('analysis_cache')
+        .update({ hit_count: (cached as any).hit_count + 1 })
+        .eq('cache_key', cacheKey)
+
+      return NextResponse.json({ ...cached.result_json, fromCache: true })
+    }
+    // --- FIN CACHE CHECK ---
+
+    // Cache miss : déduire le crédit normalement
     if (userId) {
-      const supabase = await createAdminClient()
       const { data: deducted, error } = await supabase
         .rpc('deduct_credit', { p_user_id: userId })
       if (error || !deducted) {
@@ -57,15 +89,14 @@ export async function POST(request: NextRequest) {
 
     const zone = criteria.zone && criteria.zone !== 'Monde entier' ? criteria.zone : null
 
-const userPrompt = filters.length === 0
-  ? 'Aucun critère spécifique — population mondiale complète. Retourne percentage: 100.'
-  : `Estime le pourcentage de la population ${zone ? `de la zone "${zone}"` : 'mondiale'} correspondant à ces critères :
+    const userPrompt = filters.length === 0
+      ? 'Aucun critère spécifique — population mondiale complète. Retourne percentage: 100.'
+      : `Estime le pourcentage de la population ${zone ? `de la zone "${zone}"` : 'mondiale'} correspondant à ces critères :
 ${filters.join('\n')}
 
 ${zone ? `Base de calcul : population de "${zone}" uniquement. Le percentage et le count doivent refléter cette zone, pas le monde entier.` : ''}
 
 Réponds uniquement en JSON strict.`
-
 
     const response = await anthropic.messages.create({
       model: 'claude-sonnet-4-6',
@@ -78,8 +109,19 @@ Réponds uniquement en JSON strict.`
     const clean = raw.replace(/```json|```/g, '').trim()
     const result = JSON.parse(clean)
 
+    // --- STOCKAGE EN CACHE ---
+    await supabase
+      .from('analysis_cache')
+      .upsert({
+        cache_key: cacheKey,
+        result_json: result,
+        profile_type: profileType,
+        hit_count: 1,
+        expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
+      }, { onConflict: 'cache_key' })
+    // --- FIN STOCKAGE ---
+
     if (userId) {
-      const supabase = await createAdminClient()
       await supabase.from('analyses').insert({
         user_id: userId,
         profile_type: profileType,
