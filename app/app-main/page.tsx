@@ -25,27 +25,27 @@ export default function AppMain() {
   const [credits, setCredits] = useState<number | null>(null)
   const [userId, setUserId] = useState<string | null>(null)
   const [viralPhrase, setViralPhrase] = useState('')
+  const [loadingPhrase, setLoadingPhrase] = useState('')
+  const [loadingTab, setLoadingTab] = useState<Tab>('search')
 
   useEffect(() => {
-  const supabase = createBrowserClient(
-    process.env.NEXT_PUBLIC_SUPABASE_URL!,
-    process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
-  )
+    const supabase = createBrowserClient(
+      process.env.NEXT_PUBLIC_SUPABASE_URL!,
+      process.env.NEXT_PUBLIC_SUPABASE_ANON_KEY!
+    )
 
-  // Vérifie la session au montage
-  supabase.auth.getSession().then(({ data }) => {
-    if (!data.session) router.replace('/login')
-  })
+    supabase.auth.getSession().then(({ data }) => {
+      if (!data.session) router.replace('/login')
+    })
 
-  // Surveille les changements de session en continu
-  const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
-    if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
-      router.replace('/login')
-    }
-  })
+    const { data: { subscription } } = supabase.auth.onAuthStateChange((event, session) => {
+      if (event === 'SIGNED_OUT' || (!session && event !== 'INITIAL_SESSION')) {
+        router.replace('/login')
+      }
+    })
 
-  return () => subscription.unsubscribe()
-}, [])
+    return () => subscription.unsubscribe()
+  }, [])
 
   const handleCreditsLoaded = useCallback((balance: number, uid: string | null) => {
     setCredits(balance); setUserId(uid)
@@ -87,6 +87,29 @@ export default function AppMain() {
       return
     }
 
+    // Phrases dramatiques selon le type d'analyse
+    const dramaticPhrases = type === 'search'
+      ? [
+          'Comparaison avec 8 milliards de personnes…',
+          'Calcul de la rareté de ton idéal…',
+          'Analyse des critères en cours…',
+          'Résultat presque prêt…',
+        ]
+      : [
+          'Comparaison avec 8 milliards de personnes…',
+          'Calcul de ta rareté démographique…',
+          'Analyse de ton profil en cours…',
+          'Résultat presque prêt…',
+        ]
+
+    let phraseIndex = 0
+    setLoadingPhrase(dramaticPhrases[0])
+    setLoadingTab(type)
+    const phraseInterval = setInterval(() => {
+      phraseIndex = (phraseIndex + 1) % dramaticPhrases.length
+      setLoadingPhrase(dramaticPhrases[phraseIndex])
+    }, 900)
+
     setLoading(true); setError(null)
     try {
       const res = await fetch('/api/analyze', {
@@ -95,16 +118,15 @@ export default function AppMain() {
         body: JSON.stringify({ criteria, profileType: type, userId }),
       })
       if (res.status === 402) {
-      setError('Tes crédits sont épuisés. Achète un pack pour continuer tes analyses.')
-      setTimeout(() => router.push('/pricing'), 2500)
-      return
+        setError('Tes crédits sont épuisés. Achète un pack pour continuer tes analyses.')
+        setTimeout(() => router.push('/pricing'), 2500)
+        return
       }
-      
+
       if (!res.ok) throw new Error('Erreur serveur')
       const data = await res.json()
       setResult(data)
 
-      // Génère la phrase virale en arrière-plan dès que les deux résultats sont dispo
       if (type === 'self' && searchResult) {
         generateViralPhrase(searchResult, data)
       }
@@ -113,13 +135,20 @@ export default function AppMain() {
       setView(prev => ({ ...prev, [type]: 'result' }))
       window.scrollTo({ top: 0, behavior: 'smooth' })
     } catch { setError("Erreur lors de l'analyse. Réessaie.") }
-    finally { setLoading(false) }
+    finally {
+      clearInterval(phraseInterval)
+      setLoading(false)
+      setLoadingPhrase('')
+    }
   }
 
   const searchActiveCount = getActiveCriteria(searchCriteria).length
   const selfActiveCount = getActiveCriteria(selfCriteria).length
   const isLoading = tab === 'search' ? loadingSearch : loadingSelf
   const currentView = tab === 'search' ? view.search : tab === 'self' ? view.self : 'criteria'
+  const isAnyLoading = loadingSearch || loadingSelf
+  const accentColor = loadingTab === 'search' ? '#C8FF00' : '#74d1ff'
+  const accentRgb = loadingTab === 'search' ? '200,255,0' : '116,209,255'
 
   const tabs: { id: Tab; label: string; accent: string }[] = [
     { id: 'search', label: 'Je cherche', accent: '#C8FF00' },
@@ -130,6 +159,101 @@ export default function AppMain() {
   return (
     <div className="min-h-screen relative" style={{ backgroundColor: 'var(--bg)' }}>
       <div className="grain-overlay" />
+
+      {/* OVERLAY LOADING DRAMATIQUE */}
+      {isAnyLoading && (
+        <div style={{
+          position: 'fixed', inset: 0, zIndex: 100,
+          background: 'rgba(13,14,11,0.97)',
+          display: 'flex', flexDirection: 'column',
+          alignItems: 'center', justifyContent: 'center',
+          gap: '36px',
+        }}>
+          {/* Orbe animé */}
+          <div style={{ position: 'relative', width: '130px', height: '130px' }}>
+            {/* Halo externe */}
+            <div style={{
+              position: 'absolute', inset: '-10px', borderRadius: '50%',
+              background: `radial-gradient(circle, rgba(${accentRgb},0.15) 0%, transparent 70%)`,
+              animation: 'miroir-pulse 2s ease-in-out infinite',
+            }} />
+            {/* Anneau rotatif */}
+            <div style={{
+              position: 'absolute', inset: '10px', borderRadius: '50%',
+              border: `1.5px solid rgba(${accentRgb},0.4)`,
+              animation: 'miroir-spin 4s linear infinite',
+            }} />
+            {/* Anneau rotatif inverse */}
+            <div style={{
+              position: 'absolute', inset: '22px', borderRadius: '50%',
+              border: `1.5px solid rgba(${accentRgb},0.2)`,
+              animation: 'miroir-spin-reverse 3s linear infinite',
+            }} />
+            {/* Point central */}
+            <div style={{
+              position: 'absolute', inset: '38px', borderRadius: '50%',
+              background: accentColor,
+              animation: 'miroir-pulse 1.5s ease-in-out infinite',
+              boxShadow: `0 0 20px rgba(${accentRgb},0.6)`,
+            }} />
+          </div>
+
+          {/* Chiffre 8B */}
+          <div style={{ textAlign: 'center' }}>
+            <div style={{
+              fontFamily: 'Syne, sans-serif',
+              fontSize: '80px',
+              fontWeight: 800,
+              color: accentColor,
+              lineHeight: 1,
+              letterSpacing: '-3px',
+              animation: 'miroir-pulse 2s ease-in-out infinite',
+              textShadow: `0 0 40px rgba(${accentRgb},0.4)`,
+            }}>
+              8B
+            </div>
+            <div style={{
+              fontSize: '10px',
+              color: 'rgba(255,255,255,0.35)',
+              letterSpacing: '0.2em',
+              textTransform: 'uppercase',
+              marginTop: '6px',
+              fontFamily: 'DM Sans, sans-serif',
+            }}>
+              personnes analysées
+            </div>
+          </div>
+
+          {/* Phrase dynamique */}
+          <div style={{
+            fontSize: '14px',
+            color: 'rgba(255,255,255,0.55)',
+            fontFamily: 'DM Sans, sans-serif',
+            textAlign: 'center',
+            padding: '0 48px',
+            minHeight: '22px',
+            letterSpacing: '0.01em',
+          }}>
+            {loadingPhrase}
+          </div>
+
+          {/* Barre de progression */}
+          <div style={{
+            width: '120px', height: '2px',
+            background: 'rgba(255,255,255,0.08)',
+            borderRadius: '2px',
+            overflow: 'hidden',
+          }}>
+            <div style={{
+              height: '100%',
+              background: accentColor,
+              borderRadius: '2px',
+              animation: 'miroir-progress 3.6s ease-in-out infinite',
+            }} />
+          </div>
+        </div>
+      )}
+
       <CreditsBar onCreditsLoaded={handleCreditsLoaded} />
 
       {/* Tabs */}
@@ -157,23 +281,23 @@ export default function AppMain() {
       <div className="overflow-y-auto relative z-10" style={{ paddingTop: '112px', paddingBottom: '96px' }}>
 
         {error && (
-  <div className="mx-5 mt-4 p-4 rounded-xl text-center" style={{
-    background: error.includes('épuisés') ? 'rgba(200,255,0,0.08)' : 'rgba(255,92,77,0.1)',
-    color: error.includes('épuisés') ? '#C8FF00' : 'var(--error)',
-    border: `1px solid ${error.includes('épuisés') ? 'rgba(200,255,0,0.3)' : 'rgba(255,92,77,0.2)'}`,
-    fontSize: '14px', fontFamily: 'DM Sans'
-  }}>
-    {error.includes('épuisés') && (
-      <div style={{ fontSize: '24px', marginBottom: '8px' }}>✦</div>
-    )}
-    {error}
-    {error.includes('épuisés') && (
-      <div style={{ fontSize: '12px', opacity: 0.7, marginTop: '6px' }}>
-        Redirection dans 3 secondes…
-      </div>
-    )}
-  </div>
-)}
+          <div className="mx-5 mt-4 p-4 rounded-xl text-center" style={{
+            background: error.includes('épuisés') ? 'rgba(200,255,0,0.08)' : 'rgba(255,92,77,0.1)',
+            color: error.includes('épuisés') ? '#C8FF00' : 'var(--error)',
+            border: `1px solid ${error.includes('épuisés') ? 'rgba(200,255,0,0.3)' : 'rgba(255,92,77,0.2)'}`,
+            fontSize: '14px', fontFamily: 'DM Sans'
+          }}>
+            {error.includes('épuisés') && (
+              <div style={{ fontSize: '24px', marginBottom: '8px' }}>✦</div>
+            )}
+            {error}
+            {error.includes('épuisés') && (
+              <div style={{ fontSize: '12px', opacity: 0.7, marginTop: '6px' }}>
+                Redirection dans 3 secondes…
+              </div>
+            )}
+          </div>
+        )}
 
         {/* TAB: Je cherche */}
         {tab === 'search' && (
