@@ -48,11 +48,23 @@ export async function POST(request: NextRequest) {
         .update({ hit_count: (cached.hit_count ?? 0) + 1 })
         .eq('cache_key', cacheKey)
 
+      // Même sur cache hit : stocker dans analyses pour alimenter les stats sociales
+      if (userId) {
+        const pctColumn = profileType === 'search' ? 'search_pct' : 'self_pct'
+        await supabase.from('analyses').insert({
+          user_id: userId,
+          profile_type: profileType,
+          criteria,
+          result: cached.result_json,
+          [pctColumn]: cached.result_json.percentage,
+        })
+      }
+
       return NextResponse.json({ ...cached.result_json, fromCache: true })
     }
     // --- FIN CACHE CHECK ---
 
-    // Cache miss : déduire le crédit normalement
+    // Cache miss : déduire le crédit
     if (userId) {
       const { data: deducted, error } = await supabase
         .rpc('deduct_credit', { p_user_id: userId })
@@ -64,7 +76,6 @@ export async function POST(request: NextRequest) {
       }
     }
 
-    // Construire le prompt avec les nouveaux critères
     const filters: string[] = []
     if (criteria.genre && criteria.genre !== 'Tous') filters.push(`- Genre : ${criteria.genre}`)
     if (criteria.ageMin !== undefined && criteria.ageMax !== undefined &&
@@ -125,20 +136,22 @@ Réponds uniquement en JSON strict.`
         hit_count: 1,
         expires_at: new Date(Date.now() + 30 * 24 * 60 * 60 * 1000).toISOString(),
       }, { onConflict: 'cache_key' })
-    // --- FIN STOCKAGE ---
 
+    // --- STOCKAGE ANALYSE avec percentage dans la bonne colonne ---
     if (userId) {
+      const pctColumn = profileType === 'search' ? 'search_pct' : 'self_pct'
       await supabase.from('analyses').insert({
         user_id: userId,
         profile_type: profileType,
         criteria,
         result,
+        [pctColumn]: result.percentage,
       })
     }
 
     return NextResponse.json(result)
   } catch (error) {
     console.error('Analyze error:', error)
-    return NextResponse.json({ error: 'Erreur lors de l\'analyse' }, { status: 500 })
+    return NextResponse.json({ error: "Erreur lors de l'analyse" }, { status: 500 })
   }
 }
